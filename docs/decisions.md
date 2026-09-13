@@ -315,3 +315,18 @@ Reason: Event flexibility is stronger structured evidence than the absence of pr
 Alternatives considered: Continue category-only classification; tune individual amounts; apply the maximum to every expense.
 
 Consequences: All three unsafe overpredictions decrease, but residual overprediction remains and benchmark categorical matches fall by two. The rule is retained for safety and schema consistency. Further changes stop where evidence becomes speculative. Benchmark: `artifacts/evaluation/safety-pass-v1-fixed-streams`; comparison: `artifacts/diagnostics/final-targeted-pass-before-after.csv`.
+
+
+## Decision: Conservative evidence resolution for production coverage
+
+Status: Accepted
+
+Context: The first production run withheld 55 rows due mostly to missing model targets, uncertain positive cash, malformed extra assertions, two trailing cadence outliers, and one cash-neutral/lifecycle collision.
+
+Decision: Use a repository `related_event_id` only when it identifies one missing-amount event and exactly one untargeted event-scoped amount fact. Treat unconfirmed income/refunds and unposted reversals as no cash contribution or release; retain existing pending debits. Drop unusable model assertions only when another grounded fact or deterministic informational interpretation resolves the evidence. When one of multiple income streams ended but its identity cannot be established, exclude all affected future income from capacity. A long exact cadence may ignore one trailing off-cadence observation. Cash-neutral pairing excludes lifecycle-linked debit/refund pairs.
+
+Reason: These rules use structured relationships and financially conservative uncertainty handling without inventing facts or changing planning/scoring policy.
+
+Alternatives considered: Require the model to repeat linked IDs; count uncertain credits; guess an income-stream identity; relax grounding globally; special-case production request IDs.
+
+Consequences: Cached production coverage increases from 195/250 to 250/250 with zero unsupported/failed rows. All 250 serialized rows pass strict validation; 111 tests and 25/25 sample processing pass. Three missing image cache entries required targeted gpt-5-mini extraction; final cached replay uses zero calls.

@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "code"))
 
 from buy_or_wait.domain import UnsupportedCase
+from buy_or_wait import extraction
 from buy_or_wait.extraction import ExtractionConfig, extract
 from buy_or_wait.forecast import build_forecast
 from buy_or_wait.loading import RawContext
@@ -62,6 +63,55 @@ def response(*facts, input_tokens=100, output_tokens=20):
 
 
 class ExtractionTest(unittest.TestCase):
+    def test_linked_missing_amount_supplies_omitted_model_target(self):
+        raw = raw_context()
+        event = dict(raw.events[0])
+        event["amount"] = ""
+        image = {"image_id": "image_x", "user_id": raw.request["user_id"],
+                 "request_id": raw.request["request_id"],
+                 "related_event_id": event["event_id"]}
+        raw = replace(raw, events=(event,) + raw.events[1:], images=(image,))
+        extracted = {"facts": [{"fact_type": "event_amount", "value": "123.45",
+                    "currency": event["currency"], "effective_date": None,
+                    "scope": "event", "target_event_id": None,
+                    "related_event_ids": [], "category": event["category"],
+                    "direction": event["direction"], "confidence": "high",
+                    "evidence": "Amount due 123.45"}]}
+        grounded = extraction._ground_facts("image", image, extracted, raw)
+        self.assertEqual(grounded["facts"][0]["target_event_id"], event["event_id"])
+
+    def test_uncertain_positive_cash_is_deterministic_no_change(self):
+        raw = raw_context()
+        message = {"message_id": "message_x", "user_id": raw.request["user_id"],
+                   "request_id": raw.request["request_id"], "related_event_id": "",
+                   "sent_at": "2026-01-01T00:00:00Z", "source_type": "user",
+                   "message_text": "Your quarterly bonus is still subject to the final performance review."}
+        fact = extraction._deterministic_message_fact(message, raw)
+        self.assertEqual(fact["fact_type"], "no_material_change")
+        self.assertIsNone(fact["value"])
+
+    def test_ambiguous_household_income_cessation_excludes_uncertain_income(self):
+        raw = raw_context()
+        message = {"message_id": "message_x", "user_id": raw.request["user_id"],
+                   "request_id": raw.request["request_id"], "related_event_id": "",
+                   "sent_at": "2026-01-01T00:", "source_type": "employer",
+                   "message_text": "One household employment income source has ended; the identity is not stated."}
+        fact = extraction._deterministic_message_fact(message, raw)
+        self.assertEqual((fact["fact_type"], fact["category"], fact["direction"]),
+                         ("stream_termination", "salary", "credit"))
+
+    def test_internal_transfer_pair_excludes_linked_refund_lifecycle(self):
+        raw = raw_context()
+        debit = dict(raw.events[0], event_id="debit", amount="25", status="settled")
+        refund = dict(raw.events[0], event_id="refund", event_type="refund",
+                      direction="credit", amount="25", status="settled",
+                      linked_event_id="debit")
+        raw = replace(raw, events=(debit, refund))
+        message = {"message_id": "m", "related_event_id": "", "sent_at": "2026-04-03",
+                   "message_text": "The matching debit and credit came from a transfer between your two accounts."}
+        fact = extraction._deterministic_message_fact(message, raw)
+        self.assertEqual(fact["fact_type"], "no_material_change")
+
     def message(self, text, identifier="m"):
         return dict(message_id=identifier, user_id="u", request_id="r", related_event_id="",
                     sent_at="2026-04-01T00:00:00Z", source_type="bank", message_text=text)

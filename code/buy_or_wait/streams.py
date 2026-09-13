@@ -90,6 +90,11 @@ def infer_cadence(dates: tuple[date, ...], policy: StreamPolicy = StreamPolicy()
     intervals = tuple((right - left).days for left, right in zip(ordered, ordered[1:]))
     candidates = [value for value in policy.fixed_intervals
                   if all(abs(gap - value) <= policy.interval_tolerance_days for gap in intervals)]
+    if not candidates and len(intervals) >= policy.minimum_observations:
+        candidates = [value for value in policy.fixed_intervals
+                      if all(abs(gap - value) <= policy.interval_tolerance_days
+                             for gap in intervals[:-1])
+                      and abs(intervals[-1] - value) > policy.interval_tolerance_days]
     if len(candidates) == 1:
         value = candidates[0]
         names = {7: "weekly", 14: "biweekly", 28: "four_weekly"}

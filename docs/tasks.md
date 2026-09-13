@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Final targeted deterministic pass complete; production dry run is awaiting review.
+Production blocker pass complete; 250/250 cached production rows pass strict read-back validation.
 
 ## In progress
 
@@ -24,8 +24,7 @@ Final targeted deterministic pass complete; production dry run is awaiting revie
 
 ## Next
 
-- [ ] Review residual forecast-policy uncertainty before the 250-request dry run.
-- [ ] Preserve cached extraction and run production diagnostics without sample tuning.
+- [ ] Review the 250-row artifact and prepare final submission steps only after user approval.
 
 ## Completed
 
@@ -69,6 +68,19 @@ Final targeted deterministic pass complete; production dry run is awaiting revie
 - [x] Add `live`, `cached`, and `deterministic-only` evaluator modes with real usage and cache accounting.
 - [x] Add message/image fixtures and regression coverage; live model calls remain outside unit tests.
 - [x] Record `selective-extraction-v2-final-cached-verified`: 24 processed, 1 forecast-unsupported, 0 failed, 1 fully matching row; zero model calls and 10 cache hits.
+
+- [x] Preflight 250 unique production requests and pass 106 tests.
+- [x] Run approved live extraction dry run: 195 processed, 55 unsupported, 0 failed; 156 calls and $0.10026175 measured cost.
+- [x] Replay production evidence from cache with 156 hits and zero model calls.
+- [x] Read back and audit the 195 serialized rows; all present rows pass internal structural, supplied-option, and spending-change checks.
+- [x] Confirm cached sample regression: 25 processed, 0 unsupported/failed; sample policy unchanged.
+
+- [x] Resolve unique evidence-to-missing-event targets and conservative uncertain-positive-cash handling.
+- [x] Normalize unusable extra assertions without weakening grounding; retain usable grounded facts.
+- [x] Resolve two trailing cadence outliers and prevent cash-neutral matching from consuming linked refunds.
+- [x] Populate three missing image cache entries with targeted gpt-5-mini calls.
+- [x] Record `blocker-pass-v4-final-cached`: 250 processed, 0 unsupported/failed, strict read-back passed, zero model calls.
+- [x] Pass 111 tests and preserve 25/25 cached sample processing.
 
 ## Blocked / needs decision
 

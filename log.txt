@@ -3004,3 +3004,310 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## [2026-09-13T04:33:37-05:00] Production diagnostic dry run blocked on live extraction approval
+
+User Prompt (verbatim, secrets redacted):
+The final targeted sample pass is complete. Current state: 106 tests passing; all 25 solved samples process; extraction is stable and cached; deterministic pipeline exists. Run the complete 250-request production dataset as a diagnostic dry run under artifacts/production, use deterministic-first/cache/live gpt-5-mini extraction, strictly validate the read-back CSV, inventory failures, rerun samples, and report production readiness. Do not tune, modify datasets, overwrite root output.csv, package, commit, push, or broadly fix issues.
+
+Agent Response Summary:
+Passed preflight and 106 tests, verified 250 unique production requests, and created a per-request production diagnostic runner. A sandboxed live run processed 96 rows and could not reach OpenAI for 153 evidence-bearing requests; automatic approval review rejected the escalated external transmission without destination-specific user approval. Completed a deterministic-only inventory and cached sample regression while leaving root output.csv untouched.
+
+Actions:
+* Added code/production/main.py and produced artifacts/production/dry-run-v1 plus dry-run-v1-deterministic.
+* Ran 106 tests and cached 25-sample regression successfully.
+* Requested explicit approval for transmitting production evidence to OpenAI gpt-5-mini.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
+## [2026-09-13T04:46:53-05:00] Approved production dry run completed
+
+User Prompt (verbatim, secrets redacted):
+The final targeted sample pass is complete.
+
+Current state:
+
+- 106 tests passing
+- all 25 solved samples process
+- zero unsupported / zero failed on sample benchmark
+- extraction is stable, versioned, cached, and inexpensive
+- deterministic reconciliation, stream modeling, forecast, planning, validation, and serialization exist
+- no known unsafe estimator defect is intentionally left unfixed
+- sample forecast-policy accuracy remains imperfect
+
+We are now entering production-readiness mode.
+
+Do NOT perform another broad sample-tuning pass.
+
+## Goal
+
+Run the complete 250-request production dataset as a diagnostic dry run and determine whether the system can safely produce a valid submission artifact.
+
+This is NOT yet the final root `output.csv`.
+
+Generate production artifacts under `artifacts/production/...`.
+
+[Full prompt included preflight, normal deterministic/cache/live gpt-5-mini extraction, temporary production CSV, strict read-back validation, failure inventory and clustering, cached sample regression, readiness classification, constraints, and 13 requested report items.]
+
+Follow-up authorization (verbatim):
+The final targeted sample pass is complete.
+
+Current state:
+
+- 106 tests passing
+- all 25 solved samples process
+- zero unsupported / zero failed on sample benchmark
+- extraction is stable, versioned, cached, and inexpensive
+- deterministic reconciliation, stream modeling, forecast, planning, validation, and serialization exist
+- no known unsafe estimator defect is intentionally left unfixed
+- sample forecast-policy accuracy remains imperfect
+
+We are now entering production-readiness mode.
+
+Do NOT perform another broad sample-tuning pass.
+
+[User explicitly approved transmitting necessary production messages/images to OpenAI gpt-5-mini, requested completion of the production diagnostic, and prohibited broad tuning, root output generation, commits, and pushes.]
+
+Agent Response Summary:
+Ran the approved 250-request production diagnostic with live gpt-5-mini extraction, then replayed all extraction from cache. Produced 195 internally valid rows; 55 requests remained controlled unsupported, chiefly extraction-contract and unresolved-evidence cases. Verified 106 tests and the cached 25-sample regression, recorded measured usage and strict read-back findings, and classified the system NOT READY without changing financial policy.
+
+Actions:
+* Added code/production/main.py and updated docs/tasks.md.
+* Wrote live and cached artifacts under artifacts/production/.
+* Ran 156 live model calls and a zero-call cached replay.
+* Ran 106 tests and the 25-sample cached regression.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
+## [2026-09-13T05:01:35-05:00] Production blocker coverage pass
+
+User Prompt (verbatim, secrets redacted):
+The first 250-request production dry run completed.
+
+Current production state:
+
+* 106 tests passing
+* 250 production requests
+* 195 successful
+* 55 controlled unsupported
+* 0 failed
+* all 195 produced rows pass strict serialized CSV validation
+* extraction cache populated
+* cached replay requires zero model calls
+* 25/25 solved samples still process
+* do NOT tune financial scoring in this milestone
+
+Failure clusters:
+
+* 17 extracted event amounts lack a target
+* 22 genuinely unresolved evidence cases
+* 6 message grounding rejections
+* 6 missing/malformed extracted amounts
+* 2 inconsistent forecast cadence
+* 1 model returned no facts
+* 1 ambiguous lifecycle link
+
+Goal:
+
+**maximize safe production coverage toward 250/250 without weakening evidence validation or changing financial scoring policy.**
+
+Use cached extraction wherever possible.
+
+## Priority 1: Fix the 17 missing-event-target cases
+
+Investigate why extracted image/event amounts cannot be attached to their intended events.
+
+Use repository relationships first.
+
+If an evidence record/image is uniquely linked to exactly one eligible event with missing amount, then the relationship itself may establish the target even if the model omitted `target_event_id`.
+
+Implement a generalized deterministic resolver such as:
+
+```text
+extracted amount
++
+unique repository evidence→event relationship
+=
+targeted event fact
+```
+
+Only do this when the target is unambiguous.
+
+Never choose among multiple plausible events.
+
+Do not require the model to rediscover an ID already established structurally by the repository.
+
+Add regression tests.
+
+## Priority 2: Reclassify genuinely unresolved evidence
+
+Inspect all 22 “genuinely unresolved” cases.
+
+Distinguish between:
+
+A. uncertainty that should block normalization entirely
+
+versus
+
+B. uncertainty that can be represented conservatively and passed into the deterministic financial engine.
+
+Examples:
+
+* unsettled/unconfirmed bonus → do not count as available income
+* processing/unconfirmed refund → do not count as available cash until confirmed
+* disputed incoming payment → exclude unless confirmed
+* potentially owed expense → conservatively reserve only when repository/evidence establishes obligation
+* unknown optional future income → zero contribution to capacity
+
+The final challenge requires a prediction for every request.
+
+Therefore, where uncertainty can safely be represented as “do not rely on this positive cash flow,” prefer a conservative normalized state over `unsupported`.
+
+Do NOT invent amounts, dates, settlements, or obligations.
+
+If a material unknown truly prevents even a conservative financial state, keep it unsupported and explain why.
+
+Document each generalized uncertainty policy.
+
+Add tests.
+
+## Priority 3: Diagnose the 13 extraction-shape failures
+
+Cases:
+
+* 6 grounding rejections
+* 6 missing/malformed amounts
+* 1 no-facts result
+
+Inspect cached raw model responses and evidence.
+
+Classify each failure before changing anything.
+
+Look for shared causes such as:
+
+* numeric commas/currency formatting
+* valid assertion plus malformed extra assertion
+* missing event ID despite unique structural target
+* model grounding text not matching normalized evidence formatting
+* schema-valid but semantically incomplete output
+* evidence that truly contains no usable financial fact
+
+Prefer deterministic normalization/targeting fixes over new model calls.
+
+Do NOT weaken grounding globally.
+
+If a small number remain genuinely extraction-limited after deterministic fixes, report them separately for possible stronger-model retry.
+
+## Priority 4: Fix the 2 cadence blockers
+
+Investigate the two inconsistent-cadence cases.
+
+Apply only a generalized deterministic cadence rule supported by event history.
+
+Do not tune amounts or financial scoring.
+
+Add regression tests.
+
+## Priority 5: Resolve the lifecycle blocker
+
+Investigate the one ambiguous lifecycle relationship.
+
+Use structured IDs, timestamps, statuses, amounts, and evidence relationships.
+
+Resolve only if the repository establishes a unique interpretation.
+
+Otherwise retain controlled uncertainty.
+
+## Evaluation loop
+
+After each cluster fix:
+
+1. run unit tests
+2. run the 250 requests in cached extraction mode
+3. preserve prior artifacts
+4. perform strict CSV read-back validation
+5. rerun the 25 solved samples in cached mode
+
+No live model calls unless absolutely necessary.
+
+## Important metric
+
+Track:
+
+```text
+production rows produced / 250
+```
+
+alongside:
+
+* unsupported count
+* failed count
+* stage/cluster counts
+* strict CSV validation
+* sample regressions
+
+Do not optimize sample score in this milestone.
+
+## Model escalation decision
+
+Do NOT switch the overall extraction system to a stronger model.
+
+If extraction-shape cases remain after deterministic fixes, identify the exact small set that may benefit from a stronger model and report:
+
+* request/evidence count
+* current failure reason
+* why deterministic resolution is impossible
+* whether a targeted retry with a stronger model is justified
+
+Do not perform broad stronger-model re-extraction yet.
+
+## Stopping rule
+
+Stop when:
+
+* generalized blocker fixes are exhausted, or
+* remaining cases require speculative interpretation.
+
+Do not invent rules solely to reach 250 rows.
+
+## At completion report
+
+1. target-link resolver fix and affected count
+2. unresolved-evidence policies and affected count
+3. extraction-shape findings
+4. cadence fixes
+5. lifecycle result
+6. tests passing
+7. production coverage before/after
+8. unsupported/failed counts
+9. strict CSV validation result
+10. sample regression result
+11. remaining blocker clusters
+12. exact number of cases, if any, that justify targeted stronger-model extraction
+13. READY / READY AFTER TARGETED MODEL RETRY / NOT READY
+
+Agent Response Summary:
+Implemented generalized structural target resolution, conservative unresolved-positive-cash handling, extraction-shape filtering, trailing cadence-outlier handling, and lifecycle-safe cash-neutral matching. Production coverage increased from 195/250 to 250/250 with zero unsupported or failed requests; all rows pass strict read-back validation. Added five regressions, reached 111 passing tests, preserved 25/25 sample processing, and used three targeted gpt-5-mini calls only to fill missing image cache entries; final cached replay used zero calls.
+
+Actions:
+* Edited extraction, stream inference, focused tests, tasks, and decision log.
+* Ran preserved cached production artifacts after each generalized pass.
+* Created artifacts/production/blocker-pass-v4-final-cached/output.csv and strict_readback_audit.json.
+* Ran 111 tests and cached 25-sample regression.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

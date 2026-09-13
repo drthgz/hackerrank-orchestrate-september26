@@ -167,6 +167,19 @@ def _validate_fact(fact: dict, event_ids: set[str]) -> None:
 def _ground_facts(source_type: str, source: dict, extracted: dict,
                   context: RawContext | None = None) -> dict:
     facts = [fact for fact in extracted.get("facts", []) if fact.get("confidence") == "high"]
+    # Repository linkage is authoritative targeting evidence. A model should not
+    # need to repeat an ID already supplied by images.csv/messages.csv, but only
+    # use it for the uniquely linked event whose amount is actually missing.
+    linked = source.get("related_event_id")
+    if linked and context is not None:
+        eligible = [event for event in context.events
+                    if event["event_id"] == linked and not event["amount"]]
+        already_targeted = [fact for fact in facts if fact.get("target_event_id") == linked]
+        candidates = [fact for fact in facts
+                      if fact.get("fact_type") in {"event_amount", "event_amount_date"}
+                      and fact.get("scope") == "event" and not fact.get("target_event_id")]
+        if len(eligible) == 1 and not already_targeted and len(candidates) == 1:
+            candidates[0]["target_event_id"] = linked
     if source_type == "image":
         target = source.get("related_event_id")
         facts = [fact for fact in facts if fact.get("fact_type") == "event_amount"
@@ -194,7 +207,8 @@ def _ground_facts(source_type: str, source: dict, extracted: dict,
                 if len(scheduled_salary) == 1:
                     fact["target_event_id"] = scheduled_salary[0]["event_id"]
                 elif ("confirmed salary is now expected" in source.get("message_text", "").casefold()
-                      or "replaces the payroll date" in source.get("message_text", "").casefold()):
+                      or "replaces the payroll date" in source.get("message_text", "").casefold()
+                      or "menggantikan tanggal penggajian" in source.get("message_text", "").casefold()):
                     settled_salary = [event for event in context.events
                                       if event["category"] == "salary" and event["status"] == "settled"]
                     if settled_salary:
@@ -207,6 +221,12 @@ def _ground_facts(source_type: str, source: dict, extracted: dict,
                     and fact.get("category") and fact.get("direction")
                     and fact.get("scope") in {"one_occurrence", "ongoing"}):
                 fact["fact_type"] = "stream_amount"
+            if (fact.get("fact_type") in {"event_amount", "event_amount_date"}
+                    and not fact.get("target_event_id")
+                    and fact.get("category") == "salary"
+                    and fact.get("direction") == "credit"):
+                fact["fact_type"] = "stream_amount"
+                fact["scope"] = "one_occurrence"
             # Drop internally incomplete assertions before confidence validation.
             # They carry no usable claim and must not make a separate grounded
             # fact unusable (for example, a confirmation plus a speculative date).
@@ -227,6 +247,8 @@ def _ground_facts(source_type: str, source: dict, extracted: dict,
             value = fact.get("value")
             if fact.get("fact_type") in {"event_amount", "event_amount_date", "stream_amount",
                                          "stream_percent_change"}:
+                if not isinstance(value, str) or not re.search(r"\d", value):
+                    continue
                 value_digits = re.sub(r"\D", "", value or "")
                 if value_digits and value_digits not in text_digits:
                     continue
@@ -244,13 +266,24 @@ def _ground_facts(source_type: str, source: dict, extracted: dict,
 
 def _deterministic_message_fact(message: dict, context: RawContext) -> dict | None:
     text = " ".join(message["message_text"].casefold().split())
+    ambiguous_household_cessation = (
+        "one household employment income source has ended" in text
+        or "salah satu sumber pendapatan kerja rumah tangga telah berakhir" in text)
+    if ambiguous_household_cessation:
+        return {"fact_type": "stream_termination", "value": None, "currency": None,
+                "effective_date": message["sent_at"][:10], "scope": "ongoing",
+                "target_event_id": None, "related_event_ids": [],
+                "category": "salary", "direction": "credit", "confidence": "high",
+                "evidence": message["message_text"][:240]}
     if "matching debit and credit" in text and "transfer between your two accounts" in text:
         candidates = [event for event in context.events
                       if event["direction"] in {"debit", "credit"} and event["amount"]]
         pairs = [(left, right) for index, left in enumerate(candidates)
                  for right in candidates[index + 1:]
                  if left["amount"] == right["amount"]
-                 and left["direction"] != right["direction"]]
+                 and left["direction"] != right["direction"]
+                 and left.get("linked_event_id") != right["event_id"]
+                 and right.get("linked_event_id") != left["event_id"]]
         if len(pairs) == 1:
             return {"fact_type": "cash_neutral", "value": None, "currency": None,
                     "effective_date": None, "scope": "informational",
@@ -289,6 +322,14 @@ def _deterministic_message_fact(message: dict, context: RawContext) -> dict | No
         "has not reached your account yet", "has not been credited", "isn't withdrawable",
         "isn’t withdrawable",
         "no cash proceeds have been generated", "belum disetujui", "masih menunggu",
+        "subject to the final performance review", "still pending approval",
+        "awaiting approval", "refund is still processing", "refund settles",
+        "reversal has not been posted", "dana pembalikannya belum tercatat",
+        "will confirm the final home-currency amount", "rate applied when it settles",
+        "nilai yang ditampilkan akan terus berubah", "final settlement will be sent separately",
+        "rincian penyelesaian akhir akan dikirim secara terpisah",
+        "pembayaran berikutnya dari shiftpay masih tertunda",
+        "belum masuk ke rekening anda",
     )
     if any(phrase in text for phrase in no_cash_phrases):
         return {"fact_type": "no_material_change", "value": None, "currency": None,
@@ -302,6 +343,26 @@ def _deterministic_message_fact(message: dict, context: RawContext) -> dict | No
                 "target_event_id": message["related_event_id"] or None,
                 "related_event_ids": [], "category": None, "direction": None,
                 "confidence": "high", "evidence": message["message_text"][:240]}
+    informational_phrases = (
+        "receipt has the final amount", "receipt contains the final",
+        "transaction history shows the amount", "minimum payments due on two separate",
+        "proceeds from your investment sale have settled",
+        "hasil penjualan investasi anda sudah masuk",
+        "previous debit attempt failed",
+    )
+    if any(phrase in text for phrase in informational_phrases):
+        return {"fact_type": "no_material_change", "value": None, "currency": None,
+                "effective_date": None, "scope": "informational",
+                "target_event_id": message["related_event_id"] or None,
+                "related_event_ids": [], "category": None, "direction": None,
+                "confidence": "high", "evidence": message["message_text"][:240]}
+    if (("cash prize" in text and "release charge" in text)
+            or ("hadiah uang tunai" in text and "biaya pencairan" in text)):
+        return {"fact_type": "no_material_change", "value": None, "currency": None,
+                "effective_date": None, "scope": "informational",
+                "target_event_id": None, "related_event_ids": [], "category": None,
+                "direction": None, "confidence": "high",
+                "evidence": message["message_text"][:240]}
     return None
 
 

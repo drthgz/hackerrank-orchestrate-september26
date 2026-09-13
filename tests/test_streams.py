@@ -75,6 +75,11 @@ class CadenceAndAmountTest(unittest.TestCase):
         with self.assertRaisesRegex(UnsupportedCase, "insufficient"):
             infer_cadence((date(2026, 1, 1), date(2026, 1, 8)))
 
+    def test_long_exact_history_tolerates_one_trailing_off_cadence_observation(self):
+        dates = tuple(date(2026, 1, 1) + timedelta(days=10 * index)
+                      for index in range(6)) + (date(2026, 2, 25),)
+        self.assertEqual(infer_cadence(dates).interval_days, 10)
+
     def test_amount_estimation_is_separate_and_directional(self):
         debits = tuple(replace(event(str(i), date(2026, i, 1)), amount=Decimal(value))
                        for i, value in zip((1, 2, 3), ("10", "30", "20")))
