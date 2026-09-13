@@ -860,3 +860,193 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+## [2026-09-13T04:32:17.225144+00:00] Complete provisional vertical slice
+
+User Prompt (verbatim, secrets redacted):
+Authorize a narrow, explicitly provisional forecasting policy for the vertical-slice milestone.
+
+Your decision to pause rather than substitute current-balance headroom for 90-day safe capacity was correct.
+
+Proceed with financial processing for the selected vertical-slice samples, but keep the forecast deliberately narrow and isolated so it can later be replaced by the full financial engine.
+
+## Scope
+
+This is NOT the full forecasting implementation.
+
+The goal is only to complete the vertical slice:
+```text
+sample request
+ ->  request context
+ ->  normalized structured facts
+ ->  provisional 90-day forecast
+ ->  deterministic decision
+ ->  prediction
+ ->  serialization
+ ->  validation
+```
+
+Use `request_01` and `request_09` if they remain appropriate.
+
+## Provisional forecasting policy
+
+Implement the smallest deterministic policy necessary for these selected samples.
+
+### General rules
+
+1. Use only structured financial data already available for the user.
+2. Do not invoke an LLM/model.
+3. Do not infer unsupported semantic meaning from messages or images.
+4. Do not treat missing values as zero.
+5. Use exact monetary arithmetic (`Decimal` or equivalent).
+6. Keep the forecast horizon explicitly request-relative and 90 days.
+7. Keep all provisional assumptions centralized and versioned rather than scattering them through business logic.
+
+### Recurrence
+
+For this milestone, recurrence may be inferred only when the structured historical data shows a clear, repeated pattern.
+
+Use a deliberately conservative rule.
+
+A recurrence must have:
+
+- multiple prior occurrences representing the same type of financial stream
+- consistent sign/direction
+- sufficiently similar amounts
+- a clearly repeated calendar interval or cadence
+
+Do not infer recurrence from a single historical observation.
+
+Do not create a recurring stream when the evidence is ambiguous.
+
+If recurrence cannot be inferred under this narrow policy, keep it unresolved rather than inventing one.
+
+### Known future events
+
+Explicit future events take precedence over inferred recurrence for the same occurrence.
+
+Do not double-count an inferred future event and an explicit future event representing the same financial movement.
+
+### Pending / settled behavior
+
+Follow only repository-confirmed cash-state rules already identified during analysis.
+
+In particular, do not allow a pending credit to increase available capacity unless the repository rules explicitly permit it.
+
+Avoid double-counting pending debits when their corresponding settlement occurs.
+
+### Minimum balance
+
+For each candidate payment:
+
+simulate the request payment and the forecasted financial timeline.
+
+A payment is considered financially safe only if the balance never falls below the user's required minimum balance across the provisional 90-day forecast.
+
+Equality with the minimum balance is allowed unless the repository explicitly states otherwise.
+
+### Same-day ordering
+
+If exact intra-day ordering is not specified by the repository, use one deterministic conservative ordering and document it as provisional.
+
+Prefer an ordering that does not artificially inflate available capacity.
+
+Do not ask an LLM to choose this policy.
+
+### Output status
+
+Do not force a prediction if required financial facts remain unresolved.
+
+The vertical-slice run should fail with a clear diagnostic rather than silently producing an unjustified financial result.
+
+## Architecture constraint
+
+Keep provisional forecasting behind a clean interface.
+
+For example conceptually:
+```text
+ForecastPolicy -> build_forecast(context) -> ForecastTimeline
+```
+
+Do not couple recurrence inference directly into CSV loading, serialization, or output validation.
+
+We should be able to replace the provisional implementation later without changing the rest of the pipeline.
+
+## Tests
+
+Add focused deterministic tests for the provisional behavior introduced here.
+
+At minimum cover:
+
+- clear recurrence recognized
+- single occurrence does not become recurrence
+- ambiguous cadence is rejected
+- explicit future event suppresses duplicate inferred occurrence
+- minimum-balance violation rejects unsafe payment
+- exact equality with minimum balance behaves according to repository rule
+- pending credit does not artificially increase capacity
+- monetary arithmetic avoids float drift
+- same-day ordering is deterministic
+- selected vertical-slice samples run end to end
+
+Also add one regression-style test around any non-obvious policy discovered while completing the slice.
+
+## Documentation
+
+Update:
+
+- `docs/decisions.md` with the provisional recurrence/ordering policy
+- `docs/tasks.md` with milestone progress
+- `docs/design.md` only if architecture changes
+
+Clearly label the forecast policy as:
+
+**Provisional vertical-slice policy — subject to replacement after evaluator-guided analysis of all solved samples.**
+
+Do not present it as the final financial policy.
+
+## Definition of done
+
+The milestone is complete when:
+
+1. `request_01` and/or `request_09` can run end to end
+2. legitimate predictions are generated without sample-answer leakage
+3. the provisional 90-day forecast is deterministic and isolated
+4. output validation passes
+5. tests pass
+6. generated predictions can be compared with sample expected outputs outside application logic
+
+Do not implement the full evaluator yet.
+Do not implement AI extraction.
+Do not process all 25 samples.
+Do not optimize the provisional policy against individual sample labels.
+Do not commit or push.
+
+When finished, report:
+
+1. provisional forecasting assumptions implemented
+2. files changed
+3. tests added and test results
+4. command to run the vertical slice
+5. field-by-field generated vs expected results for the selected samples
+6. any mismatch and your best diagnosis of its cause
+7. any provisional assumption that now appears questionable
+8. whether the architecture remained unchanged
+
+Agent Response Summary:
+Implemented isolated ForecastPolicy/build_forecast/ForecastTimeline and deterministic simulation with strict recurrence, conservative amount extremes, explicit-occurrence precedence, pending-credit suppression, pending-debit reservation, Decimal arithmetic, and conservative same-day ordering. Completed the thin application pipeline, CLI and external input-only sample adapter; request_09 runs end to end, while request_01 fails explicitly because unsupported lifecycle and single historical salary cannot justify a forecast. All 29 focused tests pass, including 15 new tests, and an external post-run comparison matches all seven structured fields for request_09; only explanation wording differs. Updated README, decisions and tasks; architecture unchanged, no model calls, full evaluator, final output, commits, pushes or dataset/configuration edits.
+
+Actions:
+* Created code/buy_or_wait/forecast.py, processing.py, pipeline.py, scripts/run_vertical_slice.py, tests/test_forecast.py; implemented code/main.py.
+* Updated README.md, docs/decisions.md and docs/tasks.md.
+* Ran python3 -B scripts/run_vertical_slice.py --request-id request_09; independent structural validation passed.
+* Ran python3 -B -m unittest discover -s tests -q: 29 tests passed; git diff --check passed.
+* Compared generated artifacts/vertical-slice/request_09/predictions.csv with selected sample answer outside application logic, only after pipeline completion.
+* Appended and verified this log entry with tool=Codex.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+

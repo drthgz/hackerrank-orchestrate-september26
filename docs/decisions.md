@@ -2,19 +2,26 @@
 
 Accepted entries identify either confirmed repository rules or agreed engineering choices. Revisit entries are unresolved proposals, not implementation defaults. Sources: [problem statement](../problem_statement.md), [README](../README.md), [AGENTS.md](../AGENTS.md).
 
-## Decision: Vertical-slice financial scope requires clarification
+## Decision: Isolated provisional vertical-slice forecast
 
-Status: Revisit
+Status: Accepted
 
-Context: Input-only inspection found request_01 and request_09 have no evidence/FX dependencies, but both have recurring obligations. Other evidence-free samples also require forecasting or payment-policy logic. The milestone requires a legitimate prediction while prohibiting invention of unresolved forecast policy.
+Context: The user authorized narrow provisional forecasting after structured-only sample inspection showed that current balance alone could not justify a 90-day prediction.
 
-Decision: Build independent plumbing/contracts now; keep financial processing pending the user's choice between a narrow explicit provisional forecast and a diagnostic-only slice until policy agreement. Do not label current balance headroom as 90-day safe capacity.
+Decision: **Provisional vertical-slice policy — subject to replacement after evaluator-guided analysis of all solved samples.** Implement `ForecastPolicy -> build_forecast(context) -> ForecastTimeline` separately from loading, decisions, serialization, and validation. Policy `vertical-slice-v1` uses:
 
-Reason: A correctly shaped CSV is not a financial safety proof. Existing accepted unresolved-data and policy boundaries still apply.
+- A supplied opening-balance snapshot, past settled events for recurrence only, and an inclusive request-date through request-date + 90 days timeline. Same-day settled source events fail because snapshot timing remains unresolved.
+- Structured `(event_type, category, direction)` stream keys; all supplied prior settled observations; at least three observations. Amounts must each be within 35% of the stream median. Forecast maximum observed expense and minimum observed income. Only structured `income/salary` credits are extrapolated.
+- Exact 7/10/14/21/28-day intervals, or one/two fixed day-of-month slots repeated identically for at least three consecutive months. Monthly slots after day 28, stale histories, mixed/duplicate dates, singleton streams, and ambiguous patterns fail explicitly.
+- Explicit same-stream/same-settlement-date events replace inferred occurrences, including pending credits (which suppress inference but add no cash). Pending debits are reserved at the request date exactly once. A same-stream pending-to-settled lifecycle is supported; other linked lifecycles fail for the future resolver.
+- Same-day debits, then candidate payments, then credits, with stable IDs as tie-breaks. Initial balance and every movement are checked; equality with the reserve passes. Decimal arithmetic throughout.
+- No evidence interpretation, FX forecasting, optional spending changes, or unresolved-value defaults. The only selected strategy is an eligible fee-free full payment today, and only if simulation proves the entire capped request safe. Unsafe full payment fails rather than fabricating a fallback strategy/status.
 
-Alternatives considered: Current-balance-only affordability (rejected as misleading); sample-specific answers (forbidden); implementing full forecasting (out of scope).
+Reason: These explicit conservative development conventions complete plumbing without implementing the general financial engine. They are not claimed as organizer-defined estimators or final policy.
 
-Consequences: Loading/normalization and structural components can be tested, but the milestone is not complete until the financial scope is settled and the selected path runs end to end. No architecture redesign is required.
+Alternatives considered: Current-balance-only decisions (invalid); single-observation salary extrapolation (forbidden); full engine or model interpretation (out of scope).
+
+Consequences: `request_09` runs end to end. `request_01` stays unsupported because it has complex linked lifecycles and only one prior salary observation. One sample match does not validate the policy generally. The 35% band, category-based stream identity, min/max estimators, fixed horizon endpoint, and pending-hold snapshot convention require later evaluation. Development CSVs are staged and independently structurally validated before replacing their output artifact; final root output is protected.
 
 ## Decision: Controlled deterministic pipeline
 

@@ -1,0 +1,2 @@
+request_id,user_id,request_date,request_type,requested_amount,desired_completion_date,allows_partial_payment,request_text
+request_09,user_09,2026-07-04,other,166.61,2026-07-23,true,"Is the full membership fee affordable today, or should I wait? The annual membership costs EUR 166.61."

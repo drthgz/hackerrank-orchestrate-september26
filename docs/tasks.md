@@ -2,17 +2,16 @@
 
 ## Current phase
 
-Phase 2 — minimal vertical slice authorized and in progress. Evaluator remains out of scope.
+Phase 2 — minimal vertical slice complete for request_09. Awaiting user milestone review; evaluator not started.
 
 ## In progress
 
-- Complete the minimal processing and runnable path after the pending forecasting-scope decision.
+- None; milestone implementation and tests complete.
 
 ## Next
 
-- [ ] Resolve the narrow forecast versus diagnostic-only scope question (asked during implementation).
-- [ ] Implement the agreed deterministic processing, entry point, and selected-path end-to-end test.
-- [ ] Run selected predictions, compare outside application logic, and document the runnable command.
+- [ ] Review the completed vertical slice and its provisional assumptions.
+- [ ] After authorization, begin the evaluation harness milestone with sample answers isolated.
 
 ## Completed
 
@@ -24,12 +23,17 @@ Phase 2 — minimal vertical slice authorized and in progress. Evaluator remains
 - [x] Identify request_01 and request_09 as candidates using input/context complexity only: no messages/images or FX; recurrence still required.
 - [x] Add external sample-input projection and strict application input schema; test answer mutation/rejection.
 - [x] Add structured CSV loading, relationship checks, typed facts with Decimal/date/provenance, serialization, and independent structural validation.
-- [x] Add focused synthetic contract tests and selected-input normalization checks (no financial predictions yet).
+- [x] Add focused synthetic contract tests and selected-input normalization checks.
+- [x] Implement isolated versioned provisional forecast, full-payment sufficient-case decision, application entry point, and staged output validation.
+- [x] Run request_09 end to end and compare outside application logic: seven structured fields match; explanation differs intentionally.
+- [x] Keep request_01 as an explicit unsupported-case test; no unjustified prediction.
+- [x] Pass 29 focused tests, including 15 new policy/end-to-end tests and pending-credit suppression regression.
+- [x] Document the runnable command in README; no model calls, evaluator, final output, commits, or pushes.
 
 ## Blocked / needs decision
 
 - [x] Obtain implementation authorization for the vertical slice only.
-- [ ] User clarification pending: authorize a narrow explicit provisional forecast, or stop at diagnostic output until forecast policy is agreed. Current-balance-only output would violate the 90-day requirement.
+- [x] User authorized explicit provisional recurrence and conservative same-day ordering.
 - [ ] Resolve opening-balance timing, pending-hold treatment, horizon boundaries, and same-day ordering before the full financial engine.
 - [ ] Specify recurrence/conservative-spending policies and amendment scope before forecasting implementation.
 - [ ] Resolve installment duration, deadline/status edge cases, and recurring spending-change targeting before complete planning.

@@ -1,0 +1,2 @@
+request_id,amount_safe_to_pay,affordability_status,recommended_payment_method,payment_plan,earliest_date_for_full_payment,spending_changes_needed,decision_explanation
+request_09,166.61,affordable_now,full_payment,2026-07-04:166.61,2026-07-04,none,"Provisional vertical-slice-v1: pay EUR 166.61 today; projected minimum balance 1938.55 remains at least 600 over the request-relative 90-day horizon, without spending changes."

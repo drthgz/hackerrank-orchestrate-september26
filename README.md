@@ -20,6 +20,33 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 
 ## Quick Start
 
+### Development vertical slice (provisional)
+
+Run with Python 3.10+ and no third-party dependencies or API key:
+
+```bash
+python3 -B scripts/run_vertical_slice.py --request-id request_09
+python3 -B -m unittest discover -s tests -v
+```
+
+The adapter projects input columns before invoking `code/main.py`; the application
+rejects request files containing expected-output columns. Development predictions
+are written to `artifacts/vertical-slice/request_09/predictions.csv`, after independent
+structural validation. It does not write the final root `output.csv`.
+
+**Provisional vertical-slice policy — subject to replacement after evaluator-guided
+analysis of all solved samples.** Only a safe, eligible immediate full payment is
+selected. Unresolved facts, ambiguous recurrence, or other required payment strategies
+fail explicitly. `request_01` is intentionally unsupported (complex lifecycle records
+and only one prior salary observation). No AI calls or sample benchmark evaluator run.
+See [the decision log](docs/decisions.md) for exact provisional rules.
+
+For an already projected, input-only request file, the application entry point is:
+
+```bash
+python3 -B code/main.py --requests artifacts/vertical-slice/request_09/requests.csv --output artifacts/vertical-slice/request_09/predictions.csv
+```
+
 Clone the repository and move into the project directory:
 
 ```bash
