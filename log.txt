@@ -594,3 +594,269 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+## [2026-09-13T04:18:41.674598+00:00] Vertical-slice contracts; forecast scope pending
+
+User Prompt (verbatim, secrets redacted):
+The documentation foundation is complete. Proceed to the next milestone: **the minimal end-to-end vertical slice**.
+
+Before changing code, review the current `docs/design.md`, `docs/plan.md`, `docs/tasks.md`, and `docs/decisions.md` and treat them as the current project source of truth alongside the repository specification.
+
+Do not redesign the architecture unless implementation reveals a concrete problem.
+
+## Goal
+
+Build the smallest runnable end-to-end pipeline that proves our architecture and component boundaries work.
+
+This milestone is about **plumbing, contracts, deterministic behavior, and testability**, not solving all 25 sample requests yet.
+
+The vertical slice should demonstrate:
+```text
+sample request -> load structured datasets -> build request context -> normalize structured facts -> minimal deterministic processing -> produce prediction object -> serialize required output -> validate output structure
+```
+
+Do not introduce AI/model calls in this milestone unless inspection proves they are unavoidable for every suitable sample.
+
+## Step 1 — Select sample cases
+
+Inspect `dataset/sample_requests.csv` and its related data.
+
+Select **one or two of the simplest representative sample requests** whose required facts are available primarily from structured data and which do not require complex image/message interpretation.
+
+Explain briefly why you selected them.
+
+Do not select them because their expected answers are easy to reproduce.
+
+The expected output columns in `sample_requests.csv` are ground truth for evaluation only.
+
+**The pipeline must never receive or inspect expected output fields.**
+
+Create an explicit separation between:
+```text
+sample input
+```
+
+and:
+```text
+sample expected output
+```
+
+before the request enters application code.
+
+This anti-leakage boundary must remain when the evaluator is implemented later.
+
+## Step 2 — Establish minimal project structure
+
+Use the simplest module structure consistent with `docs/design.md`.
+
+Do not introduce unnecessary frameworks, agent orchestration libraries, databases, web servers, dependency injection frameworks, or abstractions that are not needed yet.
+
+Prefer small typed components/functions with clear responsibilities.
+
+At minimum, establish boundaries for:
+
+- dataset loading
+- request context construction
+- normalized domain/fact representation
+- deterministic processing
+- prediction representation
+- serialization
+- output validation
+
+These boundaries may initially contain limited behavior.
+
+Do not prematurely implement the complete financial engine.
+
+## Step 3 — Data loading and context construction
+
+Implement deterministic loading of the datasets needed by the selected request(s).
+
+Build a request context using repository-defined relationships.
+
+Validate important relationships such as:
+
+- `request_id`
+- `user_id`
+- related financial events
+- payment options
+- messages/images when applicable
+- exchange-rate information when applicable
+
+Do not silently ignore malformed references.
+
+Do not mutate source dataset files.
+
+## Step 4 — Normalized representation
+
+Create the minimal typed internal representation needed for downstream deterministic logic.
+
+Maintain the architecture:
+```text
+structured records + future selective AI extraction  ->  normalized facts/context  ->  deterministic financial logic
+```
+
+The deterministic financial engine should not eventually need to care whether a normalized fact originated from CSV, deterministic parsing, a message extractor, or an image extractor.
+
+Where useful, preserve provenance such as source type and source ID.
+
+Do not build the AI extractor yet.
+
+## Step 5 — Minimal deterministic processing
+
+Implement only enough deterministic behavior to process the selected vertical-slice case(s) legitimately.
+
+Do NOT:
+
+- hardcode request IDs
+- hardcode sample expected answers
+- add special-case logic for the selected samples
+- attempt to implement every recurrence/payment/forecasting rule
+- invent behavior where the specification is unresolved
+
+If a selected case unexpectedly requires complex unsupported logic, choose a more appropriate simple sample rather than adding hacks.
+
+Any financial calculation implemented here must follow confirmed repository rules.
+
+Use appropriate exact monetary representation rather than binary floating-point where financial correctness requires it.
+
+## Step 6 — Prediction contract
+
+Create a prediction/domain object representing the exact required submission fields.
+
+The internal representation should make invalid states difficult to serialize.
+
+Implement deterministic serialization into the required CSV schema.
+
+Do not optimize explanation wording against sample labels.
+
+## Step 7 — Independent output validation
+
+Implement a small deterministic validator that checks at least:
+
+- exact required columns
+- allowed enum/status values
+- required fields
+- valid monetary formatting
+- valid date formatting
+- payment-plan structural validity
+- obvious internal inconsistencies
+
+Keep validation separate from decision generation.
+
+A generator must not be allowed to declare its own invalid output valid.
+
+This is not yet the complete financial safety validator; it is the first structural validation layer.
+
+## Step 8 — Tests for this milestone
+
+Add focused tests for the deterministic functionality introduced in this vertical slice.
+
+At minimum test:
+
+1. loading/context construction
+2. expected-output leakage prevention
+3. normalized representation
+4. serialization
+5. output validation
+6. the selected vertical-slice path end-to-end
+
+Where practical, use synthetic fixtures for deterministic unit tests rather than relying exclusively on sample rows.
+
+Do not implement the full sample benchmark evaluator yet.
+
+However, for the selected one or two samples, it is acceptable to manually/report diagnostically how the generated structured output compares with the known sample answer **after the pipeline has completed**.
+
+That comparison must remain outside application logic.
+
+## Step 9 — Make it runnable
+
+Provide one simple documented command that runs the vertical slice.
+
+Prefer the repository's expected entry-point conventions.
+
+The command should make it obvious:
+
+- which request(s) were processed
+- whether output validation passed
+- where generated output was written
+
+Do not overwrite the final root `output.csv` during development.
+
+Use a development/run artifact location instead.
+
+## Step 10 — Maintain project documentation
+
+As work progresses:
+
+- update `docs/tasks.md` with completed/current/next work
+- update `docs/decisions.md` only for material decisions
+- update `docs/design.md` only if implementation changes the architecture
+- update `docs/plan.md` only if milestone sequencing changes
+
+Keep these updates concise.
+
+If implementation exposes an unresolved specification question, record it instead of silently inventing a rule.
+
+## Scope guard
+
+For this milestone, do NOT:
+
+- build the full evaluator
+- process all 25 samples
+- implement the complete 90-day forecasting engine
+- implement full recurrence inference
+- add AI/model calls unless absolutely necessary
+- optimize sample accuracy
+- implement request-specific rules
+- prepare final `output.csv`
+- polish final submission documentation
+- commit or push
+
+Stop when the vertical slice is working and tested.
+
+## Definition of done
+
+This milestone is complete when:
+
+1. one or two suitable sample requests run through the application end-to-end
+2. sample expected outputs cannot leak into application logic
+3. structured datasets are joined through explicit relationships
+4. a normalized internal representation exists
+5. deterministic logic produces a legitimate prediction
+6. the prediction serializes to the required schema
+7. independent structural validation passes
+8. focused unit tests pass
+9. there are no request-specific hardcoded answers
+10. documentation reflects the current project state
+
+When finished, do not proceed to the evaluator.
+
+Report only:
+
+1. sample request IDs selected and why
+2. files created/modified
+3. tests added and their results
+4. command to run the vertical slice
+5. generated prediction versus expected result for the selected sample(s), field by field
+6. any unresolved issues discovered
+7. any architectural decision that changed
+8. recommended next step
+
+Do not commit or push. I will review the milestone first.
+
+Agent Response Summary:
+Reviewed all four working documents and repository instructions before implementation. Selected request_01 and request_09 as structured-only candidates using input complexity, and implemented an external answer-discarding projection, strict loading/joins, normalized typed facts, prediction serialization, and independent structural validation with 14 passing tests. Both candidates still require recurrence to justify a 90-day financial claim; asked the user to choose a narrow explicit provisional forecast or diagnostic-only scope and left dependent processing pending without inventing policy. The milestone is incomplete: no prediction command/output or sample-answer comparison was produced, and no model calls, commits, pushes, or source dataset/configuration edits were made.
+
+Actions:
+* Created code/buy_or_wait/__init__.py, domain.py, loading.py, normalize.py, output.py, validation.py.
+* Created scripts/sample_inputs.py and tests/test_vertical_slice.py.
+* Updated docs/tasks.md and docs/decisions.md with progress and pending scope decision.
+* Ran PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v: 14 tests passed.
+* Ran git diff --check successfully; appended and verified this log entry.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+

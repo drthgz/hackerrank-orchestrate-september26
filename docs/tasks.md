@@ -2,19 +2,17 @@
 
 ## Current phase
 
-Phase 1 — architecture/documentation foundation complete. Next: phase 2, minimal vertical slice. Application implementation is not yet authorized.
+Phase 2 — minimal vertical slice authorized and in progress. Evaluator remains out of scope.
 
 ## In progress
 
-- None. Documentation-only request completed.
+- Complete the minimal processing and runnable path after the pending forecasting-scope decision.
 
 ## Next
 
-- [ ] Select 1–2 simple sample requests without essential unstructured dependencies; keep expected answers outside pipeline context.
-- [ ] Define the narrow vertical-slice input/output contracts and its explicit limitations.
-- [ ] After authorization, implement CSV loading and request context construction for the selected inputs.
-- [ ] Normalize structured facts and add minimal deterministic processing.
-- [ ] Serialize a correctly shaped provisional prediction and validate structure.
+- [ ] Resolve the narrow forecast versus diagnostic-only scope question (asked during implementation).
+- [ ] Implement the agreed deterministic processing, entry point, and selected-path end-to-end test.
+- [ ] Run selected predictions, compare outside application logic, and document the runnable command.
 
 ## Completed
 
@@ -23,10 +21,15 @@ Phase 1 — architecture/documentation foundation complete. Next: phase 2, minim
 - [x] Agree controlled pipeline and deterministic/AI boundary.
 - [x] Establish design, phased plan, task tracker, and material decision log.
 - [x] Record unit, benchmark, regression, extraction, and release-validation loops.
+- [x] Identify request_01 and request_09 as candidates using input/context complexity only: no messages/images or FX; recurrence still required.
+- [x] Add external sample-input projection and strict application input schema; test answer mutation/rejection.
+- [x] Add structured CSV loading, relationship checks, typed facts with Decimal/date/provenance, serialization, and independent structural validation.
+- [x] Add focused synthetic contract tests and selected-input normalization checks (no financial predictions yet).
 
 ## Blocked / needs decision
 
-- [ ] Obtain implementation authorization before starting the vertical slice.
+- [x] Obtain implementation authorization for the vertical slice only.
+- [ ] User clarification pending: authorize a narrow explicit provisional forecast, or stop at diagnostic output until forecast policy is agreed. Current-balance-only output would violate the 90-day requirement.
 - [ ] Resolve opening-balance timing, pending-hold treatment, horizon boundaries, and same-day ordering before the full financial engine.
 - [ ] Specify recurrence/conservative-spending policies and amendment scope before forecasting implementation.
 - [ ] Resolve installment duration, deadline/status edge cases, and recurring spending-change targeting before complete planning.

@@ -2,6 +2,20 @@
 
 Accepted entries identify either confirmed repository rules or agreed engineering choices. Revisit entries are unresolved proposals, not implementation defaults. Sources: [problem statement](../problem_statement.md), [README](../README.md), [AGENTS.md](../AGENTS.md).
 
+## Decision: Vertical-slice financial scope requires clarification
+
+Status: Revisit
+
+Context: Input-only inspection found request_01 and request_09 have no evidence/FX dependencies, but both have recurring obligations. Other evidence-free samples also require forecasting or payment-policy logic. The milestone requires a legitimate prediction while prohibiting invention of unresolved forecast policy.
+
+Decision: Build independent plumbing/contracts now; keep financial processing pending the user's choice between a narrow explicit provisional forecast and a diagnostic-only slice until policy agreement. Do not label current balance headroom as 90-day safe capacity.
+
+Reason: A correctly shaped CSV is not a financial safety proof. Existing accepted unresolved-data and policy boundaries still apply.
+
+Alternatives considered: Current-balance-only affordability (rejected as misleading); sample-specific answers (forbidden); implementing full forecasting (out of scope).
+
+Consequences: Loading/normalization and structural components can be tested, but the milestone is not complete until the financial scope is settled and the selected path runs end to end. No architecture redesign is required.
+
 ## Decision: Controlled deterministic pipeline
 
 Status: Accepted
