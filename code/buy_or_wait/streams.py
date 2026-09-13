@@ -64,7 +64,7 @@ class ResolvedStream:
 class StreamPolicy:
     """Versioned deterministic interpretation; sample answers are not inputs."""
 
-    version: str = "recurring-streams-v1"
+    version: str = "recurring-streams-v2"
     minimum_observations: int = 3
     fixed_intervals: tuple[int, ...] = (5, 7, 10, 14, 21, 28)
     interval_tolerance_days: int = 1
@@ -104,13 +104,16 @@ def infer_cadence(dates: tuple[date, ...], policy: StreamPolicy = StreamPolicy()
     raise UnsupportedCase(f"cadence: inconsistent intervals {intervals}")
 
 
-def estimate_amount(events: tuple[Event, ...]) -> tuple[Decimal, str]:
+def estimate_amount(events: tuple[Event, ...],
+                    conservative_expense: bool = True) -> tuple[Decimal, str]:
     """Amount estimation is intentionally independent from cadence inference."""
     amounts = tuple(event.amount for event in events)
     if not amounts or any(value is None or value <= 0 for value in amounts):
         raise UnsupportedCase("amount: missing or non-positive observation")
     if events[0].direction == "debit":
-        return max(amounts), "conservative_max_observed_expense"
+        if conservative_expense:
+            return max(amounts), "conservative_max_observed_expense"
+        return sum(amounts) / len(amounts), "observed_mean_flexible_expense"
     if events[0].direction == "credit":
         return min(amounts), "conservative_min_observed_income"
     raise UnsupportedCase("amount: non-cash stream cannot project cash")
@@ -218,7 +221,18 @@ def resolve_streams(resolved: ResolvedContext, start: date, end: date,
     streams = []
     for identity, records in sorted(groups.items()):
         ordered = tuple(sorted(records, key=lambda event: (event.settlement_date, event.event_id)))
-        dates = tuple(event.settlement_date for event in ordered)
+        daily_amounts = None
+        if identity.mode == StreamMode.SPENDING_BEHAVIOR:
+            # Category behavior models daily outflow, so two genuine purchases
+            # on one day are one cadence observation whose amount is their sum.
+            # Raw event identity and provenance remain separate.
+            totals: dict[date, Decimal] = {}
+            for event in ordered:
+                totals[event.settlement_date] = totals.get(event.settlement_date, Decimal("0")) + event.amount
+            dates = tuple(sorted(totals))
+            daily_amounts = tuple(totals[value] for value in dates)
+        else:
+            dates = tuple(event.settlement_date for event in ordered)
         intervals = tuple((right - left).days for left, right in zip(dates, dates[1:]))
         if identity in terminated:
             streams.append(ResolvedStream(identity, tuple(e.event_id for e in ordered), dates,
@@ -237,7 +251,16 @@ def resolve_streams(resolved: ResolvedContext, start: date, end: date,
                                            intervals, None, Continuation.INSUFFICIENT,
                                            str(exc), None, None, ()))
             continue
-        amount, amount_policy = estimate_amount(ordered)
+        protected = identity.category in resolved.context.profile.protected
+        if daily_amounts is not None:
+            if protected:
+                amount, amount_policy = (max(daily_amounts),
+                                         "conservative_max_observed_daily_expense")
+            else:
+                amount, amount_policy = (sum(daily_amounts) / len(daily_amounts),
+                                         "observed_mean_flexible_daily_expense")
+        else:
+            amount, amount_policy = estimate_amount(ordered, conservative_expense=protected)
         expected = next_expected_date(dates[-1], cadence)
         if expected + timedelta(days=cadence.tolerance_days) < start:
             streams.append(ResolvedStream(identity, tuple(e.event_id for e in ordered), dates,

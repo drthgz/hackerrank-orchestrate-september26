@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Selective evidence extraction milestone complete; cached 25-sample benchmark verified.
+Forecast/capacity diagnostic milestone complete; `forecast-capacity-v3` runs all 25 solved samples from frozen evidence.
 
 ## In progress
 
@@ -11,11 +11,17 @@ Selective evidence extraction milestone complete; cached 25-sample benchmark ver
 - [x] Add versioned cache, provenance diagnostics, controlled failures, and measured usage.
 - [x] Run representative live extraction and populate the solved-sample cache.
 - [x] Review final cached benchmark artifact and extraction/downstream failure split.
+- [x] Aggregate same-day spending behavior observations and resolve request_17 without a special case.
+- [x] Build per-request safe-capacity traces and cluster the 90 comparable mismatches.
+- [x] Remove the unsupported extra behavior occurrence; retain cadence-derived spending.
+- [x] Apply protected-maximum versus non-protected-mean amount policy.
+- [x] Honor confirmed dated salary facts independently of historical recurrence.
+- [x] Record `forecast-capacity-v3-final`: 25 processed, 0 unsupported/failed, 1 fully matching row, 88 comparable mismatches, zero model calls.
 
 ## Next
 
-- [ ] Analyze deterministic downstream mismatches without changing extraction contracts.
-- [ ] Resolve request_17 duplicate-date spending behavior as a focused deterministic task.
+- [ ] Review three overpredicted safe amounts before relaxing any further policy.
+- [ ] Target remaining income continuation/event-eligibility and cadence/horizon clusters.
 
 ## Completed
 

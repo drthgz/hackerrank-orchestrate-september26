@@ -2700,3 +2700,215 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## [2026-09-13T04:03:14-05:00] Forecast and capacity mismatch pass
+
+User Prompt (verbatim, secrets redacted):
+The selective extraction milestone is complete.
+
+Current state:
+
+- 102 tests passing
+- 24/25 solved samples processed
+- 1 unsupported (`request_17`)
+- zero extraction-stage failures
+- cached full benchmark requires zero model calls
+- spending-change field accuracy: 84%
+- status/method/plan/date accuracy: 32%
+- amount-safe-to-pay accuracy: 4%
+- 90 comparable structured mismatches remain
+
+Do not modify extraction unless a concrete extraction bug is proven.
+
+The next milestone is:
+
+**diagnose and fix the dominant generalized forecast/capacity mismatches using frozen cached evidence.**
+
+## Step 1 — Resolve request_17 narrowly
+
+Investigate the duplicate grocery observation dates blocking `request_17`.
+
+Implement a general deterministic rule only if justified by the data model.
+
+Do not special-case `request_17`.
+
+Add regression coverage.
+
+The goal is to reach 25/25 pipeline coverage.
+
+## Step 2 — Build mismatch clusters before changing financial logic
+
+Using the current cached 25-sample benchmark, compare generated and expected outputs and group mismatches by likely observable pattern.
+
+Focus especially on `amount_safe_to_pay`.
+
+Produce a compact diagnostic report containing, per request where possible:
+
+- expected safe amount
+- actual safe amount
+- difference
+- opening balance
+- preferred minimum
+- projected baseline minimum
+- inferred future income
+- inferred future essential expenses
+- inferred flexible spending
+- pending/reserved cash
+- earliest safe full-payment date
+- chosen method
+- relevant spending changes
+- candidate minimum balance
+
+Then cluster requests by common symptoms.
+
+Potential categories may include:
+
+- opening-balance semantics
+- pending/held cash
+- future income timing
+- flexible-spending estimate
+- recurring expense amount estimate
+- duplicate forecast occurrence
+- horizon boundary
+- same-day ordering
+- capacity formula
+- earliest-safe-date semantics
+- planning/ranking rather than forecasting
+
+Do not assume these are the causes. Derive clusters from traces.
+
+## Step 3 — Prioritize generalized causes
+
+Identify the smallest number of general rules that explain the largest number of mismatches.
+
+Prioritize by:
+
+1. number of affected solved samples
+2. magnitude of safe-amount error
+3. downstream effect on status/method/date
+4. confidence that repository/sample evidence supports the rule
+
+Do not optimize individual requests.
+
+## Step 4 — Fix only well-supported general rules
+
+For each fix:
+
+- state the old behavior
+- state the generalized corrected rule
+- show which requests are affected
+- add a synthetic regression test
+- preserve conservative safety
+- rerun the full cached benchmark
+
+Do not adjust arbitrary thresholds solely to make expected values match.
+
+Do not weaken validation.
+
+## Step 5 — Pay special attention to safe capacity
+
+Verify whether `amount_safe_to_pay` should represent:
+
+- static current headroom
+- minimum headroom over the full forecast
+- maximum safe immediate payment found through simulation
+- or another repository-defined quantity
+
+Use the repository specification and multiple solved samples to determine the general rule.
+
+Do not infer the rule from one sample.
+
+## Step 6 — Flexible spending baseline
+
+Because spending-change accuracy is already high while safe amount accuracy is low, inspect whether baseline flexible spending is being estimated too conservatively or incorrectly scheduled.
+
+Keep distinct:
+
+- fixed recurring obligations
+- flexible recurring behavior
+- discretionary adjustments
+
+Do not silently remove flexible spending from the baseline.
+
+## Step 7 — Earliest safe date
+
+Verify that earliest-date calculation considers the entire remaining forecast after payment, not only the balance on the candidate day.
+
+Check horizon and deadline boundaries.
+
+## Step 8 — Evaluation loop
+
+After each generalized fix, run cached evaluation only.
+
+No live extraction should be necessary.
+
+Preserve previous artifacts.
+
+At completion produce a new named benchmark and compare against `selective-extraction-v2-final-cached-verified`.
+
+Report:
+
+- processed / unsupported / failed
+- fully correct rows
+- per-field accuracy
+- amount mean/median absolute error if useful
+- comparable mismatch count
+- mismatch clusters before and after
+- any regressions
+
+## Constraints
+
+Do NOT:
+
+- change extraction prompts/models/cache unless an extraction bug is proven
+- hardcode request IDs
+- tune expected-answer-specific constants
+- modify datasets
+- generate final 250-output file yet
+- commit or push
+- perform broad architectural redesign
+
+Prefer 2–3 high-impact general fixes over many small patches.
+
+## Definition of done
+
+This milestone is complete when:
+
+1. request_17 is resolved or clearly justified as remaining unsupported
+2. the 90 mismatches are clustered meaningfully
+3. dominant safe-capacity causes are identified
+4. supported generalized fixes have regression tests
+5. all tests pass
+6. the 25-sample cached benchmark is rerun
+7. before/after accuracy is reported
+8. no extraction calls were needed for benchmark reruns
+9. remaining dominant mismatch categories are identified
+
+At the end report:
+
+1. request_17 resolution
+2. mismatch clusters and counts
+3. dominant root causes
+4. generalized fixes
+5. tests added / total passing
+6. before/after benchmark metrics
+7. any regressions
+8. remaining top mismatch categories
+9. whether the project is ready for the 250-request production run or needs one final targeted deterministic pass
+
+Agent Response Summary:
+Resolved request_17 with daily aggregation for same-date category purchases, removed an unsupported extra spending occurrence, honored confirmed dated salary evidence, and separated protected maximum estimates from non-protected observed means. Built per-request mismatch traces and symptom clusters, ran only cached evaluations, and preserved all prior artifacts. Final forecast-capacity-v3 processes 25/25 with 105 tests passing, zero model calls, no regressions, and safe-amount MAE reduced substantially; remaining deterministic mismatches require one more targeted pass.
+
+Actions:
+* Updated streams.py, forecast.py, and a narrow proven payroll-date grounding rule in extraction.py.
+* Added synthetic regression tests in test_streams.py, test_forecast.py, and test_extraction.py.
+* Added forecast-capacity-v3 diagnostic CSV/Markdown artifacts and benchmark runs.
+* Updated README.md, docs/decisions.md, and docs/tasks.md.
+* Did not modify datasets, generate root output.csv, commit, or push.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

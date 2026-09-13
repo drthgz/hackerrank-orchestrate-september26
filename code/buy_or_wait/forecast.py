@@ -3,6 +3,7 @@
 No CSV knowledge, evidence interpretation, label access, or payment selection.
 """
 
+from calendar import monthrange
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -25,7 +26,7 @@ class ForecastPolicy:
     lifecycle resolution are deliberately unsupported. These choices are policy,
     not loader/serializer behavior or final challenge interpretations.
     """
-    version: str = "recurring-streams-v1"
+    version: str = "forecast-capacity-v3"
     horizon_days: int = 90  # Include request date and the day at +90.
     min_occurrences: int = 3
     min_months: int = 3
@@ -137,6 +138,7 @@ def build_forecast(context: FinancialContext | ResolvedContext,
                              event.currency, event.settlement_date): event
                             for event in resolved.events if event.settlement_date is not None
                             and event.settlement_date >= start}
+    applied_amendments = set()
     for stream in streams:
         if stream.continuation in {Continuation.TERMINATED, Continuation.ONE_TIME,
                                     Continuation.SUPERSEDED}:
@@ -148,16 +150,6 @@ def build_forecast(context: FinancialContext | ResolvedContext,
         if stream.identity.direction == "credit" and (stream.identity.event_type,
                                                        stream.identity.category) != ("income", "salary"):
             raise UnsupportedCase("Only repeated structured salary income is supported")
-        if stream.identity.mode == StreamMode.SPENDING_BEHAVIOR:
-            # Category-level behavior is less exact than a billed transaction.
-            # Reserve one extra maximum observation at the request boundary so
-            # timing/count uncertainty cannot create spendable capacity.
-            converted, rate_sources = to_home(stream.amount, stream.identity.currency,
-                                              context.profile.currency, start, context.rates)
-            entries.append(ForecastEntry(start, -converted,
-                                         f"behavior-contingency:{stream.identity.diagnostic_id()}",
-                                         stream.source_event_ids + rate_sources,
-                                         f"behavior_contingency:{stream.amount_policy}"))
         for occurrence_index, when in enumerate(stream.next_projected_dates):
             broad = (stream.identity.event_type, stream.identity.category,
                      stream.identity.direction, stream.identity.currency, when)
@@ -180,6 +172,8 @@ def build_forecast(context: FinancialContext | ResolvedContext,
                 if fact.fact_type == "stream_amount" and effective and selected_occurrence:
                     amount = Decimal(fact.value)
                     amendment_sources += (fact.source.source_id,)
+                    applied_amendments.add((fact.source.kind, fact.source.source_id,
+                                            fact.fact_type, fact.category, fact.effective_date))
                 if fact.fact_type == "stream_percent_change" and effective and selected_occurrence:
                     factor = Decimal("1") + Decimal(fact.value) / Decimal("100")
                     amount = amount * factor
@@ -193,6 +187,36 @@ def build_forecast(context: FinancialContext | ResolvedContext,
                                          f"inferred:{stream.identity.diagnostic_id()}:{when}",
                                          stream.source_event_ids + amendment_sources + rate_sources,
                                          f"recurrence:{stream.cadence.name}:{stream.amount_policy}"))
+    # Direct, dated salary evidence can establish a future cash occurrence even
+    # when history alone cannot establish recurrence. This never promotes an
+    # undated or uncertain income assertion into capacity.
+    for fact in context.extracted_facts:
+        key = (fact.source.kind, fact.source.source_id, fact.fact_type,
+               fact.category, fact.effective_date)
+        if (fact.fact_type != "stream_amount" or key in applied_amendments
+                or fact.category != "salary" or fact.direction != "credit"
+                or fact.effective_date is None):
+            continue
+        dates = []
+        current = fact.effective_date
+        if fact.scope == "one_occurrence":
+            dates.append(current)
+        elif fact.scope == "ongoing":
+            while current <= end:
+                dates.append(current)
+                year = current.year + (current.month == 12)
+                month = current.month % 12 + 1
+                current = date(year, month, min(current.day, monthrange(year, month)[1]))
+        for when in dates:
+            if not start <= when <= end:
+                continue
+            converted, rate_sources = to_home(Decimal(fact.value),
+                                              fact.currency or context.profile.currency,
+                                              context.profile.currency, when, context.rates)
+            entries.append(ForecastEntry(when, converted,
+                                         f"evidence:salary:{fact.source.source_id}:{when}",
+                                         (fact.source.source_id,) + rate_sources,
+                                         f"confirmed_evidence:{fact.scope}"))
     for release in resolved.reservation_releases:
         if start <= release.date <= end:
             converted, rate_sources = to_home(release.amount, release.currency, context.profile.currency, release.date, context.rates)

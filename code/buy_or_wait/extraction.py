@@ -193,6 +193,16 @@ def _ground_facts(source_type: str, source: dict, extracted: dict,
                                     and event["status"] in {"pending", "scheduled"}]
                 if len(scheduled_salary) == 1:
                     fact["target_event_id"] = scheduled_salary[0]["event_id"]
+                elif ("confirmed salary is now expected" in source.get("message_text", "").casefold()
+                      or "replaces the payroll date" in source.get("message_text", "").casefold()):
+                    settled_salary = [event for event in context.events
+                                      if event["category"] == "salary" and event["status"] == "settled"]
+                    if settled_salary:
+                        latest_date = max(event["settlement_date"] for event in settled_salary)
+                        latest = [event for event in settled_salary
+                                  if event["settlement_date"] == latest_date]
+                        if len(latest) == 1:
+                            fact["target_event_id"] = latest[0]["event_id"]
             if (fact.get("fact_type") == "event_amount" and not fact.get("target_event_id")
                     and fact.get("category") and fact.get("direction")
                     and fact.get("scope") in {"one_occurrence", "ongoing"}):

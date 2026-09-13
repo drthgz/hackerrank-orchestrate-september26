@@ -81,9 +81,11 @@ class CadenceAndAmountTest(unittest.TestCase):
         credits = tuple(replace(item, direction="credit", event_type="income", category="salary")
                         for item in debits)
         self.assertEqual(estimate_amount(debits), (Decimal("30"), "conservative_max_observed_expense"))
+        self.assertEqual(estimate_amount(debits, conservative_expense=False),
+                         (Decimal("20"), "observed_mean_flexible_expense"))
         self.assertEqual(estimate_amount(credits), (Decimal("10"), "conservative_min_observed_income"))
 
-    def test_variable_behavior_reserves_one_contingency_occurrence(self):
+    def test_variable_behavior_uses_only_cadence_derived_occurrences(self):
         from buy_or_wait.forecast import build_forecast
         groceries = tuple(replace(event(f"g{i}", date(2026, 3, 13 + 7 * i), str(value)),
                                   category="groceries", description=f"Shop {i}")
@@ -91,8 +93,23 @@ class CadenceAndAmountTest(unittest.TestCase):
         timeline = build_forecast(context(groceries))
         contingency = [entry for entry in timeline.entries
                        if entry.basis.startswith("behavior_contingency")]
-        self.assertEqual([(entry.date, entry.amount) for entry in contingency],
-                         [(timeline.start, Decimal("-12"))])
+        self.assertEqual(contingency, [])
+
+    def test_same_day_behavior_events_form_one_daily_observation(self):
+        groceries = (
+            replace(event("g1", date(2026, 3, 1), "10"), category="groceries"),
+            replace(event("g2", date(2026, 3, 1), "5"), category="groceries"),
+            replace(event("g3", date(2026, 3, 8), "12"), category="groceries"),
+            replace(event("g4", date(2026, 3, 15), "11"), category="groceries"),
+        )
+        stream = resolve_streams(reconcile(context(groceries)),
+                                 date(2026, 3, 22), date(2026, 4, 12))[0]
+        self.assertEqual(stream.observed_dates,
+                         (date(2026, 3, 1), date(2026, 3, 8), date(2026, 3, 15)))
+        self.assertEqual(stream.cadence.name, "weekly")
+        self.assertEqual(stream.amount, Decimal("38") / Decimal("3"))
+        self.assertEqual(stream.amount_policy, "observed_mean_flexible_daily_expense")
+        self.assertEqual(set(stream.source_event_ids), {"g1", "g2", "g3", "g4"})
 
 
 class ContinuationTest(unittest.TestCase):

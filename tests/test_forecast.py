@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "code"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from buy_or_wait.domain import (Event, FinancialContext, Method, Payment,
+from buy_or_wait.domain import (Event, ExtractedFact, FinancialContext, Method, Payment,
                                PaymentOption, Profile, Request, Source, UnsupportedCase)
 from buy_or_wait.forecast import (ForecastEntry, ForecastPolicy, ForecastTimeline,
                                  build_forecast, infer_occurrences, simulate)
@@ -68,6 +68,16 @@ class ForecastTest(unittest.TestCase):
         self.assertEqual(len(april), 1)
         self.assertEqual(april[0].amount, Decimal("-12"))
         self.assertEqual(april[0].basis, "explicit")
+
+    def test_confirmed_dated_salary_does_not_require_historical_recurrence(self):
+        fact = ExtractedFact("stream_amount", "50", "EUR", date(2026, 4, 15),
+                             "one_occurrence", None, (), "salary", "credit", "high",
+                             "First salary EUR 50 on 2026-04-15", Source("message", "m"),
+                             "openai", "model", "prompt", "schema")
+        timeline = build_forecast(replace(context(()), extracted_facts=(fact,)))
+        self.assertEqual([(entry.date, entry.amount, entry.basis) for entry in timeline.entries],
+                         [(date(2026, 4, 15), Decimal("50"),
+                           "confirmed_evidence:one_occurrence")])
 
     def test_pending_credit_suppresses_inference_without_adding_cash(self):
         # Regression: dropping the pending row before deduplication would recreate

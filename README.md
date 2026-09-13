@@ -35,7 +35,7 @@ are written to `artifacts/vertical-slice/request_09/predictions.csv`, after inde
 structural validation. It does not write the final root `output.csv`.
 
 The deterministic pipeline now evaluates full, wait, partial, supplied-installment,
-flexible-spending-change, and not-recommended strategies over `recurring-streams-v1`.
+flexible-spending-change, and not-recommended strategies over `forecast-capacity-v3`.
 Unresolved evidence still fails explicitly. Selective extraction is opt-in for evaluation;
 financial reasoning remains deterministic.
 See [the decision log](docs/decisions.md) for exact provisional rules.

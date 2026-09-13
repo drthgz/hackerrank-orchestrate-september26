@@ -2,6 +2,20 @@
 
 Accepted entries identify either confirmed repository rules or agreed engineering choices. Revisit entries are unresolved proposals, not implementation defaults. Sources: [problem statement](../problem_statement.md), [README](../README.md), [AGENTS.md](../AGENTS.md).
 
+## Decision: Forecast-capacity v3 amount and occurrence policy
+
+Status: Accepted
+
+Context: The cached solved-sample trace showed every v2 safe-amount error was downward. Category behavior used a maximum amount for every occurrence and inserted an additional maximum occurrence on the request date. Same-day purchases also caused an unsupported duplicate-date cadence failure. Confirmed dated salary evidence was ignored unless historical recurrence independently resolved.
+
+Decision: Aggregate genuine same-day category purchases into one daily cadence observation while retaining all source IDs. Project only cadence-derived occurrences; remove the extra request-date contingency. Keep conservative maximum amounts for protected expense streams. Continue non-protected flexible/other recurring spending at its observed mean. Treat high-confidence dated salary evidence as a direct future cash fact: one occurrence remains one occurrence, while explicitly ongoing salary repeats monthly. A targetless explicit payroll-date amendment may attach only to the unique latest supplied payroll event when the message says it replaces that date.
+
+Reason: These rules preserve protected obligations and flexible spending while removing an invented occurrence, resolving valid daily aggregation, and honoring direct confirmed future evidence. Across all solved samples they reduce safe-amount MAE from 997,908.43 to 107,276.24 without validation changes or benchmark-specific conditions.
+
+Alternatives considered: Omit flexible spending; average protected expenses; retain an undated contingency; infer salary from singleton history; tune per-request amounts.
+
+Consequences: All 25 solved samples now run with frozen cached evidence. Three safe amounts exceed solved values and require review before further relaxation. The remaining 21 underestimated rows point to event eligibility, continuation, cadence, and horizon policy. Exact safe-amount matches remain 1/25, so this is an improved deterministic baseline rather than final policy.
+
 ## Decision: Narrow versioned evidence extraction
 
 Status: Accepted

@@ -209,6 +209,18 @@ class ExtractionTest(unittest.TestCase):
         self.assertTrue(all(entry.amount == 100 for entry in salary_entries))
         self.assertTrue(all("m" in entry.source_ids for entry in salary_entries))
 
+    def test_payroll_date_amendment_targets_latest_unique_payroll(self):
+        message = self.message("Your confirmed salary is now expected on 2026-04-15. "
+                               "This replaces the payroll date shown in the earlier update.")
+        amendment = fact("event_settlement_date", None, target=None, currency=None,
+                         effective_date="2026-04-15", scope="event", category="salary",
+                         direction="credit", evidence="confirmed salary is now expected on 2026-04-15")
+        result = extract(raw_context(messages=(message,), salary_history=True), Path("unused"),
+                         ExtractionConfig(mode="live", cache_dir=Path(tempfile.mkdtemp()),
+                                          caller=lambda payload: response(amendment)))
+        latest = next(event for event in result.context.events if event["event_id"] == "salary-3")
+        self.assertEqual(latest["settlement_date"], "2026-04-15")
+
     def test_deterministic_only_preserves_missing_amount(self):
         with tempfile.TemporaryDirectory() as temporary:
             dataset = self.dataset(temporary)
