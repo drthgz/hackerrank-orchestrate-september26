@@ -176,3 +176,17 @@ Reason: A zero-call replay must not imply evidence extraction had no cost.
 Alternatives considered: Report only current calls; attribute all cache creation cost without distinguishing reuse.
 
 Consequences: Usage ledger must retain origin run, provider/model, calls, input/output tokens, costs, and per-request attribution. Do not invent an organizer policy.
+
+## Decision: Evaluation denominators, isolation, and failure reporting
+
+Status: Accepted
+
+Context: The provisional pipeline supports few samples. Scoring only successful predictions would hide low coverage, while exact prose comparison would penalize equivalent explanations.
+
+Decision: Keep input/answer splitting in `code/evaluation`, pass input-only files to the actual pipeline, and compare serialized predictions afterward. Report six primary financial fields with both all-selected and processed-only denominators. Request ID and prose equality are diagnostics. Missing predictions get explicit missing-field mismatch rows; separate their counts from actual financial mismatches and prose differences. Preserve original exception types and annotate observed pipeline boundaries; use unknown causal stage for output mismatches. Each run uses a new directory with policy/source/data fingerprints and measured usage (currently zero). Future extraction is an application concern; only disabled mode exists now.
+
+Reason: Honest coverage/accuracy reporting, no label leakage, reproducible runs, and no guessed failure causes or official aggregate score.
+
+Alternatives considered: Successful-only accuracy; fabricated fallback predictions for unsupported requests; exact string plan/prose matching; attributing a field mismatch automatically to forecasting.
+
+Consequences: Initial baseline-v1 processes 2/25, with 21 unsupported and 2 normalization failures; only 1/25 fully matches. It records 5 comparable financial mismatches, 138 missing fields and 2 prose diagnostics. Explanation semantic consistency is not assessed; structural validation only requires nonempty prose. Expected-answer mutation and answer-sentinel tests confirm expected outputs cannot affect application predictions. Financial logic was not changed to improve this baseline.

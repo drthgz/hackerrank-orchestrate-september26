@@ -2,16 +2,17 @@
 
 ## Current phase
 
-Phase 2 — minimal vertical slice complete for request_09. Awaiting user milestone review; evaluator not started.
+Phase 3 — evaluation harness complete; first full-sample baseline recorded. Awaiting user review; financial policy unchanged.
 
 ## In progress
 
-- None; milestone implementation and tests complete.
+- None; evaluator milestone complete.
 
 ## Next
 
-- [ ] Review the completed vertical slice and its provisional assumptions.
-- [ ] After authorization, begin the evaluation harness milestone with sample answers isolated.
+- [ ] Review baseline-v1 and authorize the next deterministic-engine work.
+- [ ] Investigate non_cash normalization failures with focused regressions before fixing.
+- [ ] Trace request_05 forecast/accounting to explain the false-positive affordability result; do not tune to its label.
 
 ## Completed
 
@@ -29,6 +30,12 @@ Phase 2 — minimal vertical slice complete for request_09. Awaiting user milest
 - [x] Keep request_01 as an explicit unsupported-case test; no unjustified prediction.
 - [x] Pass 29 focused tests, including 15 new policy/end-to-end tests and pending-credit suppression regression.
 - [x] Document the runnable command in README; no model calls, evaluator, final output, commits, or pushes.
+
+- [x] Build code/evaluation harness: selection, isolated inputs/answers, semantic comparison, per-request outcomes, immutable run artifacts, metadata, and zero-usage foundation.
+- [x] Add 17 evaluator tests; all 46 tests pass, including the existing 29.
+- [x] Complete smoke-v1: 2 selected, 1 processed/matching, 1 unsupported.
+- [x] Record baseline-v1: 25 selected, 2 processed, 21 unsupported, 2 failed; 1 fully matching structured row.
+- [x] Record 5 comparable financial mismatches, 138 missing fields, and 2 prose diagnostics; no benchmark failures fixed. See [evaluator baseline notes](../code/evaluation/README.md).
 
 ## Blocked / needs decision
 

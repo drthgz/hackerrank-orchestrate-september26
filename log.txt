@@ -1081,3 +1081,416 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+## [2026-09-13T04:59:33.436736+00:00] Evaluation harness and first sample baseline
+
+User Prompt (verbatim, secrets redacted):
+The minimal vertical slice is complete and verified.
+
+`request_09` runs end-to-end with:
+
+- deterministic context construction
+- provisional forecast policy `vertical-slice-v1`
+- prediction generation
+- serialization
+- independent validation
+- 29 passing tests
+
+The generated structured result matches the expected sample fields for `request_09`; only explanation wording differs.
+`request_01` correctly fails with a diagnostic rather than inventing unsupported financial assumptions. Awesome work!
+
+Proceed to the next milestone: **build the evaluation harness**.
+
+Do not substantially expand the financial engine yet.
+
+## Goal
+
+Create our primary development feedback loop:
+```text
+dataset/sample_requests.csv -> input/answer separation -> pipeline -> predictions -> evaluator -> metrics + mismatches + diagnostics
+```
+
+The evaluator must allow us to measure the current implementation honestly before we broaden financial logic.
+
+## Critical anti-leakage rule
+
+Expected sample outputs must remain completely outside application logic.
+
+The flow must remain:
+```text
+sample_requests.csv
+-> split-┐
+   ┌───────────────┐
+   │               │
+   v               V
+inputs        expected answers
+   │               | 
+   v               |
+pipeline           │
+   │               |
+   V               |
+predictions<───────┘ 
+->comparator
+```
+
+No application component may access expected outputs.
+
+Add or retain a test proving this boundary.
+
+## Evaluator requirements
+
+Implement evaluation under the repository's expected evaluation location, consistent with the current project structure and challenge requirements.
+
+The evaluator should support:
+
+### 1. Request selection
+
+Allow:
+
+- one explicit `request_id`
+- multiple explicit request IDs
+- a small named smoke subset
+- all 25 solved sample requests
+
+Do not make "all samples" the only mode.
+
+## 2. Pipeline execution
+
+For each selected sample:
+
+- strip expected output fields before application ingestion
+- run through the actual pipeline
+- capture prediction or controlled diagnostic/failure
+- do not crash the entire evaluation because one request is unsupported
+
+Each request should have an evaluation outcome.
+
+## 3. Field-level comparison
+
+Compare the generated prediction against expected values for all required output fields.
+
+At minimum report:
+
+- `amount_safe_to_pay`
+- `affordability_status`
+- `recommended_payment_method`
+- `payment_plan`
+- `earliest_date_for_full_payment`
+- `spending_changes_needed`
+- `decision_explanation`
+
+Use the exact repository output field names if they differ.
+
+Comparison rules should be explicit and deterministic.
+
+### Structured categorical fields
+
+Use exact normalized equality.
+
+### Monetary fields
+
+Parse using Decimal-compatible logic.
+
+Report:
+
+- exact match
+- absolute error when mismatched
+
+Do not compare monetary values as binary floats.
+
+### Dates
+
+Parse structurally.
+
+Report:
+
+- exact match
+- day difference when mismatched
+
+### Payment plans
+
+Parse plans structurally rather than relying solely on raw string equality.
+
+Compare their payment dates and amounts.
+
+Formatting differences that do not change plan semantics should not count as financial mismatches.
+
+### Spending changes
+
+Normalize according to the repository-defined representation before comparison.
+
+### Decision explanation
+
+Do NOT make exact prose equality part of the primary structured accuracy score.
+
+Report explanation equality only as a diagnostic.
+
+Where practical, check that generated explanations are consistent with the generated structured decision, but do not introduce an LLM judge for explanation scoring.
+
+## 4. Metrics
+
+Produce at least:
+
+- number of selected requests
+- number successfully processed
+- number unsupported/failed
+- accuracy per structured field
+- fully matching structured rows
+- total mismatch count
+
+Do not invent or claim an official HackerRank aggregate score if the repository does not provide one.
+
+If useful, produce a clearly labeled internal development score, but keep the underlying per-field metrics visible.
+
+## 5. Mismatch report
+
+Generate a machine-readable mismatch artifact containing at least:
+```text
+request_id
+field
+expected
+actual
+difference/details
+```
+
+Where useful also include:
+```text
+failure_stage
+diagnostic
+policy_version
+```
+
+This file should make failure patterns easy to inspect.
+
+Example conceptually:
+```text
+request_07
+earliest_date_for_full_payment
+expected: 2026-07-18
+actual: 2026-07-22
+difference: +4 days
+stage: forecast
+```
+
+## 6. Request-level summary
+
+Generate a concise per-request summary such as:
+```text
+request_09
+processed: yes
+structured fields correct: 6/6
+explanation exact match: no
+validation: passed
+```
+
+or:
+```text
+request_01
+processed: no
+stage: forecasting
+reason: recurrence unresolved
+```
+
+This should help distinguish:
+
+- unsupported request
+- incorrect prediction
+- serialization problem
+- validation failure
+
+## 7. Failure-stage classification
+
+Where possible, classify failures into existing architectural stages such as:
+```text
+loading
+context
+normalization
+extraction
+reconciliation
+forecast
+planning
+validation
+serialization
+```
+
+Do not pretend to know the exact cause if evidence is insufficient.
+
+Use `unknown` or an explicit diagnostic rather than guessing.
+
+## 8. Run artifacts
+
+Each evaluation run should write into its own development artifact directory.
+
+For example conceptually:
+```text
+artifacts/evaluation/<run-id>/
+    predictions.csv
+    metrics.json
+    mismatches.csv
+    request_results.json
+```
+
+Use the current project conventions if a better directory structure already exists.
+
+Do not overwrite final root `output.csv`.
+
+## 9. Run metadata
+
+Record enough metadata to make runs understandable later.
+
+At minimum:
+
+- run ID
+- timestamp if appropriate
+- request selection
+- forecast policy version
+- number of requests
+- code/config identifiers available locally
+
+Do not introduce complex experiment-management infrastructure.
+
+## 10. Usage accounting foundation
+
+Create the minimal interface/data structure needed to track future model usage:
+
+- model/provider
+- model calls
+- input tokens
+- output tokens
+- retries
+- cache hits/misses
+- estimated cost if available
+
+There are currently no model calls, so usage should truthfully report zero.
+
+Do not simulate or fabricate usage.
+
+This foundation will later support `evaluation/usage_report.md`.
+
+## 11. Cached extraction compatibility
+
+The evaluator should be designed so future AI extraction can run in modes such as:
+```text
+live
+cached
+```
+
+You do NOT need to implement AI extraction in this milestone.
+
+Just avoid coupling evaluation to live model calls.
+
+## 12. Tests
+
+Add focused tests for the evaluator itself.
+
+At minimum test:
+
+- expected answers cannot reach the pipeline
+- single-request selection
+- multiple-request selection
+- unsupported request does not crash the run
+- exact structured match
+- monetary mismatch reporting
+- date mismatch reporting
+- semantic payment-plan comparison
+- mismatch artifact generation
+- metrics computation
+- explanation excluded from primary structured score
+- zero model usage is reported truthfully
+
+Keep existing 29 tests passing.
+
+## 13. Smoke run
+
+After implementation, perform a small evaluation run.
+
+Start with:
+
+- `request_09`
+- `request_01`
+
+This is useful because we already know:
+
+- one should currently succeed
+- one should currently be unsupported
+
+Then, if the evaluator behaves correctly, run all 25 samples **without modifying financial logic to improve the score**.
+
+The purpose of the first 25-sample run is measurement, not optimization.
+
+Do not patch individual failures during this prompt.
+
+## Documentation
+
+Update:
+
+- `docs/tasks.md`
+- `docs/decisions.md` only if a material evaluator decision is made
+- `docs/design.md` only if architecture changes
+- `docs/plan.md` only if milestone sequencing changes
+
+Record the first full-sample evaluation as our baseline.
+
+Do not rewrite documentation unnecessarily.
+
+## Scope constraints
+
+For this milestone do NOT:
+
+- implement missing financial strategies
+- implement AI/image extraction
+- tune recurrence rules based on individual expected answers
+- add request-specific conditions
+- modify dataset files
+- generate final root `output.csv`
+- commit or push
+
+If the full 25-sample run exposes failures, record them without fixing them yet.
+
+## Definition of done
+
+This milestone is complete when:
+
+1. the evaluator can run selected sample requests
+2. expected answers are isolated from application code
+3. metrics are produced
+4. mismatch artifacts are produced
+5. unsupported requests are captured cleanly
+6. the evaluator works independently of live model calls
+7. evaluator tests pass
+8. existing application tests still pass
+9. a 2-request smoke evaluation completes
+10. an initial 25-sample baseline evaluation completes if technically possible with the current pipeline
+
+At the end, report:
+
+1. files created/modified
+2. test results
+3. evaluator command examples
+4. smoke-run results
+5. 25-sample baseline metrics
+6. number of unsupported requests
+7. mismatch patterns grouped by field/stage
+8. whether any evaluator design assumption appears questionable
+9. recommended next implementation priority based on the baseline
+
+Do not fix benchmark failures yet.
+
+Agent Response Summary:
+Built code/evaluation CLI, sample answer/input separation, semantic comparisons, per-request failure capture, metrics/mismatch artifacts, run fingerprints, and measured-usage foundation. Added pipeline boundary annotations without modifying financial rules and 17 evaluator tests; all 46 tests passed. Smoke-v1 completed with one success and one unsupported request; baseline-v1 completed all 25 with two predictions, 21 unsupported requests and two normalization failures, yielding one fully matching structured row. Recorded request_05's five financial mismatches and non_cash normalization gaps without fixing benchmark failures; no models, dataset/configuration edits, final output, commits, or pushes.
+
+Actions:
+* Implemented code/evaluation/main.py and added __init__.py, samples.py, comparison.py, runner.py, usage.py, README.md.
+* Annotated observed failure stages in code/buy_or_wait/pipeline.py while preserving exception types.
+* Added tests/test_evaluation.py; updated docs/tasks.md and docs/decisions.md.
+* Ran python3 -B -m unittest discover -s tests -q: 46 tests passed; git diff --check passed.
+* Ran python3 -B code/evaluation/main.py --subset smoke --run-id smoke-v1.
+* Ran python3 -B code/evaluation/main.py --all --run-id baseline-v1; recorded immutable development artifacts.
+* Inspected baseline metrics and relevant source records read-only; appended and verified this log entry.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
