@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Production blocker pass complete; 250/250 cached production rows pass strict read-back validation.
+Final submission artifacts prepared and validated; manual review/submission remains.
 
 ## In progress
 
@@ -24,7 +24,8 @@ Production blocker pass complete; 250/250 cached production rows pass strict rea
 
 ## Next
 
-- [ ] Review the 250-row artifact and prepare final submission steps only after user approval.
+- [ ] User reviews final artifacts and creates the milestone commit if desired.
+- [ ] Manually upload code.zip, output.csv, and log.txt to HackerRank.
 
 ## Completed
 
@@ -81,6 +82,12 @@ Production blocker pass complete; 250/250 cached production rows pass strict rea
 - [x] Populate three missing image cache entries with targeted gpt-5-mini calls.
 - [x] Record `blocker-pass-v4-final-cached`: 250 processed, 0 unsupported/failed, strict read-back passed, zero model calls.
 - [x] Pass 111 tests and preserve 25/25 cached sample processing.
+
+- [x] Promote the byte-identical validated 250-row artifact to root `output.csv`.
+- [x] Create `evaluation/usage_report.md` from measured production inference usage.
+- [x] Build and inspect `code.zip`; exclude secrets, caches, artifacts, bytecode, and local paths.
+- [x] Pass clean extracted-archive smoke tests and all 111 unit tests.
+- [x] Verify root log/transcript exists and remains separate from `code.zip`.
 
 ## Blocked / needs decision
 

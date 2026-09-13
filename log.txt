@@ -3332,3 +3332,234 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## [2026-09-13T05:12:20-05:00] Final submission artifacts prepared
+
+User Prompt (verbatim, secrets redacted):
+The production blocker pass is complete.
+
+Current state:
+
+- 111 tests passing
+- 25/25 sample requests process
+- 250/250 production requests process
+- 0 unsupported
+- 0 failed
+- strict serialized CSV validation passes with 0 audit errors
+- extraction cache is populated
+- no stronger-model escalation is needed
+- financial scoring policy is now frozen
+
+We are entering final submission preparation.
+
+Do NOT change forecast, planning, extraction semantics, recurrence policy, or scoring behavior unless a concrete packaging/runtime bug is proven.
+
+## Goal
+
+Prepare and validate the final submission artifacts:
+
+- root `output.csv`
+- `evaluation/usage_report.md`
+- `code.zip`
+- required runnable documentation
+- `log.txt` / transcript requirements
+
+## 1. Freeze implementation
+
+Treat the current production behavior as frozen.
+
+No financial tuning.
+
+No prompt/model changes.
+
+No sample-score optimization.
+
+## 2. Create final root output.csv
+
+Use the already validated final production artifact as the source.
+
+Promote/copy the validated 250-row CSV to repository root as:
+```text
+output.csv
+```
+
+Do not regenerate it through a different code path unless necessary.
+
+After copying, reopen the root file from disk and rerun the strict read-back validator.
+
+Require:
+
+- exactly 250 rows
+- exactly 250 unique request IDs
+- exact production ID set
+- exact columns/order
+- no NaN/None/Infinity
+- valid enums
+- valid dates
+- valid monetary values
+- valid payment-plan grammar
+- valid spending-change grammar
+- supplied-installment consistency
+- internal status/method/plan consistency
+- deterministic plan validation
+
+Fail loudly if any root artifact differs from the validated production artifact.
+
+## 3. Build evaluation/usage_report.md
+
+Create the required usage report corresponding to the final full-dataset run.
+
+Include actual measured values only.
+
+Document at minimum:
+
+- provider(s)
+- model(s)
+- final extraction call count
+- cache behavior
+- input tokens
+- output tokens
+- total tokens
+- estimated total API cost
+- estimated per-request cost
+- which run the numbers correspond to
+- distinction between live production extraction and cached replay
+- note that development/Codex usage is separate from application API inference usage
+
+Use the final production live-run usage artifacts as the source of truth.
+
+Do not fabricate unavailable metrics.
+
+## 4. README / runnable instructions
+
+Verify README contains concise commands for:
+
+- environment setup
+- installing dependencies
+- setting `OPENAI_API_KEY`
+- running the solution on production input
+- producing output
+- running tests
+- optional cached mode if relevant
+
+Do not include actual API keys.
+
+Avoid machine-specific absolute paths.
+
+## 5. log.txt / transcript
+
+Review the challenge requirement and existing `AGENTS.md`.
+
+Ensure the required root `log.txt` exists and contains the appropriate tool/session summary or transcript information required by the repository instructions.
+
+Do not include secrets.
+
+Do not fabricate conversations.
+
+If the challenge requires the separate chat transcript artifact rather than embedding everything into the zip, clearly report that.
+
+## 6. Build code.zip
+
+Create the submission archive exactly as required by the challenge.
+
+Include only necessary runnable source/config/docs required by the specification.
+
+Exclude:
+
+- `.env`
+- API keys
+- `.git`
+- `artifacts/`
+- caches
+- `__pycache__`
+- local virtual environments
+- temporary outputs
+- unnecessary model cache data
+- OS/editor files
+- large diagnostics not required for submission
+
+Confirm the required implementation path exists inside the archive, especially `code/main.py` or the documented alternate.
+
+Inspect the archive contents after creation.
+
+## 7. Clean-environment smoke test
+
+From a clean enough environment/process:
+
+- use the documented entrypoint
+- verify imports resolve
+- verify configuration errors are understandable when API key is absent
+- if cached/offline smoke mode is supported, test it
+- ensure no source file depends on `/home/shiftmint/...` absolute paths
+- run all unit tests again
+
+Do not spend production API calls unnecessarily.
+
+## 8. Final artifact audit
+
+Report:
+
+- root `output.csv` validation result
+- row count
+- usage-report path and metrics
+- code.zip path and file count
+- archive exclusions verified
+- tests passing
+- README command verified
+- log.txt/transcript status
+- git status
+- any uncommitted submission artifacts
+- any remaining manual HackerRank submission steps
+
+## 9. Security audit
+
+Before finishing:
+
+- confirm `.env` is ignored
+- scan tracked/submission files for API keys/secrets
+- confirm no secret appears in `code.zip`
+- confirm no absolute developer-machine paths remain in runnable code/docs
+
+Do not print secret values in the report.
+
+## Constraints
+
+Do NOT:
+
+- modify financial semantics
+- rerun broad extraction unnecessarily
+- modify raw datasets
+- add new dependencies unless packaging proves one is missing
+- commit or push
+- submit to HackerRank automatically
+
+## Definition of done
+
+This milestone is complete when:
+
+1. root `output.csv` exists and passes strict validation
+2. `evaluation/usage_report.md` is complete and based on actual final-run usage
+3. `code.zip` is created and inspected
+4. required documentation is runnable and free of local paths
+5. required log/transcript handling is complete
+6. security audit passes
+7. tests pass
+8. exact manual submission artifacts and steps are reported
+
+At the end, give a concise FINAL SUBMISSION CHECKLIST with PASS/FAIL for every required artifact.
+
+Agent Response Summary:
+Promoted the byte-identical validated production CSV to root output.csv and revalidated all 250 rows. Created the measured application inference usage report, updated portable production instructions, built and inspected a 35-file code.zip, and passed clean extracted-archive and repository test suites with 111 tests. Security checks confirmed .env/cache/artifact exclusions, no embedded secret, and no developer-machine absolute path; log.txt remains a separate transcript submission artifact.
+
+Actions:
+* Created output.csv, evaluation/usage_report.md, and code.zip.
+* Updated README.md and docs/tasks.md.
+* Ran root CSV validation, archive integrity/security scans, clean-environment smoke tests, and 111 tests.
+* Did not commit, push, or submit.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

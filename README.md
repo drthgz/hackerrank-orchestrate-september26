@@ -20,6 +20,36 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 
 ## Quick Start
 
+### Environment and production run
+
+Python 3.10 or newer is required. The solution uses only the Python standard
+library, so there are no packages to install. Set the API key in your shell; do
+not place it in source code:
+
+```bash
+export OPENAI_API_KEY="your-key"
+python3 -B code/production/main.py \
+  --artifact-dir artifacts/production/final-run \
+  --extraction-mode live
+cp artifacts/production/final-run/output.csv output.csv
+python3 -B -m unittest discover -s tests -q
+```
+
+The production runner reads `dataset/requests.csv`, isolates failures per request,
+writes diagnostics and usage under the selected artifact directory, and validates
+the serialized CSV after reading it back. The directory must not already exist.
+
+When a compatible versioned cache is available locally, an offline replay uses:
+
+```bash
+python3 -B code/production/main.py \
+  --artifact-dir artifacts/production/cached-replay \
+  --extraction-mode cached
+```
+
+The extraction cache is a development/runtime optimization and is intentionally
+excluded from `code.zip`.
+
 ### Development vertical slice (provisional)
 
 Run with Python 3.10+ and no third-party dependencies or API key:
