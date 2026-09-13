@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Forecast/capacity diagnostic milestone complete; `forecast-capacity-v3` runs all 25 solved samples from frozen evidence.
+Final targeted deterministic pass complete; production dry run is awaiting review.
 
 ## In progress
 
@@ -17,11 +17,15 @@ Forecast/capacity diagnostic milestone complete; `forecast-capacity-v3` runs all
 - [x] Apply protected-maximum versus non-protected-mean amount policy.
 - [x] Honor confirmed dated salary facts independently of historical recurrence.
 - [x] Record `forecast-capacity-v3-final`: 25 processed, 0 unsupported/failed, 1 fully matching row, 88 comparable mismatches, zero model calls.
+- [x] Trace request_03, request_20, and request_21 overpredictions and classify their cash timelines.
+- [x] Require explicit flexible event metadata before using a non-conservative mean expense estimate.
+- [x] Add the 25-row before/after diagnostic table and record `safety-pass-v1-fixed-streams`.
+- [x] Stop further tuning where residual differences lack a repository-supported general rule.
 
 ## Next
 
-- [ ] Review three overpredicted safe amounts before relaxing any further policy.
-- [ ] Target remaining income continuation/event-eligibility and cadence/horizon clusters.
+- [ ] Review residual forecast-policy uncertainty before the 250-request dry run.
+- [ ] Preserve cached extraction and run production diagnostics without sample tuning.
 
 ## Completed
 

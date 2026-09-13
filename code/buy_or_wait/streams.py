@@ -252,15 +252,20 @@ def resolve_streams(resolved: ResolvedContext, start: date, end: date,
                                            str(exc), None, None, ()))
             continue
         protected = identity.category in resolved.context.profile.protected
+        explicitly_flexible = all(event.flexibility in {
+            "reducible", "stoppable", "reducible_or_stoppable"
+        } for event in ordered)
+        conservative_expense = protected or not explicitly_flexible
         if daily_amounts is not None:
-            if protected:
+            if conservative_expense:
                 amount, amount_policy = (max(daily_amounts),
                                          "conservative_max_observed_daily_expense")
             else:
                 amount, amount_policy = (sum(daily_amounts) / len(daily_amounts),
                                          "observed_mean_flexible_daily_expense")
         else:
-            amount, amount_policy = estimate_amount(ordered, conservative_expense=protected)
+            amount, amount_policy = estimate_amount(
+                ordered, conservative_expense=conservative_expense)
         expected = next_expected_date(dates[-1], cadence)
         if expected + timedelta(days=cadence.tolerance_days) < start:
             streams.append(ResolvedStream(identity, tuple(e.event_id for e in ordered), dates,

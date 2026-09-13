@@ -301,3 +301,17 @@ Reason: FX direction/date lookup is explicitly defined by the repository and can
 Alternatives considered: Latest-rate reuse; converting historical salary once then reusing that home-currency amount; loosening salary variation thresholds (rejected).
 
 Consequences: request_25 clears FX support but remains unsupported on transport cadence; no further fix was made. Final v2 run: `artifacts/evaluation/deterministic-core-v2-final/`. 65 tests pass; 25 selected, 1 processed, 24 unsupported, 0 failed, 1 fully matching row. Comparison is preserved at `artifacts/diagnostics/deterministic-core-v2-comparison.json`.
+
+## Decision: Fixed spending remains conservative outside protected categories
+
+Status: Accepted
+
+Context: The forecast used a mean amount for every non-protected expense behavior. That treated records explicitly marked `fixed` as flexible and contributed to unsafe capacity overprediction in request_03 and request_20.
+
+Decision: A recurring expense may use the non-protected mean policy only when its category is unprotected and every source record is explicitly reducible or stoppable. Protected or fixed-source spending uses the conservative observed maximum. This is an amount policy; it does not change cadence or spending-change eligibility.
+
+Reason: Event flexibility is stronger structured evidence than the absence of profile protection. Ignoring `fixed` understates baseline obligations.
+
+Alternatives considered: Continue category-only classification; tune individual amounts; apply the maximum to every expense.
+
+Consequences: All three unsafe overpredictions decrease, but residual overprediction remains and benchmark categorical matches fall by two. The rule is retained for safety and schema consistency. Further changes stop where evidence becomes speculative. Benchmark: `artifacts/evaluation/safety-pass-v1-fixed-streams`; comparison: `artifacts/diagnostics/final-targeted-pass-before-after.csv`.

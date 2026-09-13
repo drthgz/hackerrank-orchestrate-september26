@@ -2942,3 +2942,44 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## [2026-09-13T04:18:36-05:00] Final targeted deterministic safety pass
+
+User Prompt (verbatim, secrets redacted):
+Current state:
+
+\* 105 tests passing
+\* all 25 solved samples processed
+\* 0 unsupported
+\* 0 failed
+\* extraction is stable and cached
+\* no live model calls needed for benchmark reruns
+\* amount accuracy remains 4%
+\* status 40%
+\* method 44%
+\* payment plan 40%
+\* earliest date 32%
+\* spending changes 88%
+\* median amount error improved substantially
+\* remaining errors are mostly forecast construction
+
+This is the final targeted deterministic pass before the 250-request production dry run.
+
+Do not redesign architecture.
+
+[Prompt continues with priorities to trace request_03/request_20/request_21, analyze zero-capacity and underprediction clusters, isolate earliest-date and ranking errors, create a 25-row before/after diagnostic table, run cached evaluation after generalized fixes, avoid extraction changes/sample-specific tuning/commits/pushes, and report readiness for the 250-request dry run. No secrets present.]
+
+Agent Response Summary:
+Traced the three unsafe overpredictions and ran the frozen cached benchmark. Corrected a general safety defect: explicitly fixed recurring expenses can no longer receive a flexible mean estimate merely because their category is not protected. Added a focused regression test, preserved a 25-row before/after diagnostic artifact, documented the decision, and stopped further tuning where residual differences were not supported by repository evidence.
+
+Actions:
+* Edited code/buy_or_wait/streams.py, tests/test_streams.py, docs/tasks.md, and docs/decisions.md.
+* Ran 106 tests and cached 25-sample evaluation safety-pass-v1-fixed-streams with zero model calls.
+* Created artifacts/diagnostics/final-targeted-pass-before-after.csv.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

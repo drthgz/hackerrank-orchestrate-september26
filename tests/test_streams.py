@@ -97,10 +97,10 @@ class CadenceAndAmountTest(unittest.TestCase):
 
     def test_same_day_behavior_events_form_one_daily_observation(self):
         groceries = (
-            replace(event("g1", date(2026, 3, 1), "10"), category="groceries"),
-            replace(event("g2", date(2026, 3, 1), "5"), category="groceries"),
-            replace(event("g3", date(2026, 3, 8), "12"), category="groceries"),
-            replace(event("g4", date(2026, 3, 15), "11"), category="groceries"),
+            replace(event("g1", date(2026, 3, 1), "10"), category="groceries", flexibility="reducible"),
+            replace(event("g2", date(2026, 3, 1), "5"), category="groceries", flexibility="reducible"),
+            replace(event("g3", date(2026, 3, 8), "12"), category="groceries", flexibility="reducible"),
+            replace(event("g4", date(2026, 3, 15), "11"), category="groceries", flexibility="reducible"),
         )
         stream = resolve_streams(reconcile(context(groceries)),
                                  date(2026, 3, 22), date(2026, 4, 12))[0]
@@ -110,6 +110,15 @@ class CadenceAndAmountTest(unittest.TestCase):
         self.assertEqual(stream.amount, Decimal("38") / Decimal("3"))
         self.assertEqual(stream.amount_policy, "observed_mean_flexible_daily_expense")
         self.assertEqual(set(stream.source_event_ids), {"g1", "g2", "g3", "g4"})
+
+    def test_unprotected_fixed_behavior_still_uses_conservative_maximum(self):
+        groceries = tuple(replace(event(f"g{i}", date(2026, 3, 1 + 7 * i), str(amount)),
+                                  category="groceries", flexibility="fixed")
+                          for i, amount in enumerate((10, 15, 11)))
+        stream = resolve_streams(reconcile(context(groceries)),
+                                 date(2026, 3, 22), date(2026, 4, 12))[0]
+        self.assertEqual(stream.amount, Decimal("15"))
+        self.assertEqual(stream.amount_policy, "conservative_max_observed_daily_expense")
 
 
 class ContinuationTest(unittest.TestCase):
