@@ -38,7 +38,7 @@ structural validation. It does not write the final root `output.csv`.
 analysis of all solved samples.** Only a safe, eligible immediate full payment is
 selected. Unresolved facts, ambiguous recurrence, or other required payment strategies
 fail explicitly. `request_01` remains unsupported under narrow recurrence rules even though its
-linked lifecycle records now reconcile. Current policy version is `deterministic-core-v2`. No AI calls or sample benchmark evaluator run.
+linked lifecycle records now reconcile. Current policy version is `recurring-streams-v1`. No AI calls occur in the application.
 See [the decision log](docs/decisions.md) for exact provisional rules.
 
 For an already projected, input-only request file, the application entry point is:

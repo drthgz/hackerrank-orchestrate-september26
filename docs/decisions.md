@@ -151,6 +151,22 @@ Alternatives considered: Recent maximum/quantile/other documented estimators; re
 
 Consequences: Compare defensible configurations on frozen facts; add independent tests and avoid request-ID rules or invented expenses/income.
 
+Superseded in part by the recurring-streams-v1 decision below. Amendment duration and final estimator validation remain unresolved.
+
+## Decision: Explicit recurring streams v1
+
+Status: Accepted
+
+Context: Category-only grouping merged distinct salary sources, rejected genuine variable spending, and could extrapolate income after cessation. Singleton investments also reached recurrence logic despite lacking repetition evidence.
+
+Decision: Insert `stream classification -> cadence + continuation + amount policy` between lifecycle reconciliation and forecasting. Fixed transactions use user-scoped type/category/direction/currency plus normalized description. Groceries, transport, and dining are provisional category-level spending-behavior streams because their structured histories deliberately vary merchant labels while retaining a clear cadence. Repeated salary labels remain independent; otherwise three or more variable labels may form an independent day-of-month slot. A singleton is one-time. Two observations or inconsistent cadence are insufficient evidence. Exact 5/7/10/14/21/28-day patterns allow one day of drift; consecutive monthly calendar patterns allow two days. A missed expected occurrence makes continuation insufficient. Exact terminal payroll evidence ends only the uniquely amount/currency-matched salary stream. Explicit future events suppress a same-type/category/direction/currency/date projection.
+
+Reason: Stream identity must use the strongest structured discriminator available without merging broad categories. Continuation, cadence, and amount are distinct questions. Missing income is safely excluded; unresolved recurring debits block forecasting.
+
+Alternatives considered: Broad type/category grouping; exact-description grouping for all behavior; extrapolating singleton events; treating absence as termination; fuzzy LLM classification.
+
+Consequences: Expense amounts use maximum observed and income uses minimum observed, both provisional. Each spending-behavior stream reserves one additional maximum occurrence at the request boundary for timing/count uncertainty. Diagnostics retain source IDs, dates, intervals, cadence, state/reason, estimator, and projections. `recurring-streams-v1-final` keeps v2's 1/25 fully correct processed row and zero comparable mismatches, while recurrence-capable cases now reach planning instead of failing recurrence. These identity rules, tolerance values, behavior-category allowlist, and contingency reserve require further validation.
+
 ## Decision: Planning edge conventions
 
 Status: Revisit

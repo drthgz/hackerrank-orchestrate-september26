@@ -1912,3 +1912,410 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## 2026-09-13T01:51:43-05:00 SESSION START
+
+tool=Codex
+Repo Root: /home/shiftmint/hackerrank-orchestrate-september26
+Branch: main
+Worktree: /home/shiftmint/hackerrank-orchestrate-september26
+Parent Agent: none
+Language: py
+Time Remaining: 0d 5h 38m
+
+## 2026-09-13T01:51:43-05:00 Formalize recurring streams
+
+User Prompt (verbatim, secrets redacted):
+The deterministic core has been hardened.
+
+Current state:
+
+- 65 tests passing
+- zero normalization failures
+- zero comparable financial mismatches among processed rows
+- `request_05` no longer emits a false-positive recommendation
+- lifecycle reconciliation, non-cash handling, dated FX, provenance, and diagnostics are implemented
+- 24 of 25 samples remain unsupported, primarily because recurrence and event-eligibility semantics are intentionally conservative
+
+Proceed to the next milestone:
+
+**formalize recurring-stream identity, continuation/cessation, and one-time-event eligibility.**
+
+Do not implement AI extraction yet.
+
+## Goal
+
+Replace the current provisional recurrence heuristics with a more principled deterministic model that can answer:
+```text
+Which historical events belong to the same financial stream?
+
+Should that stream continue into the 90-day forecast?
+
+If it continues, when and for how much?
+
+Is an event recurring, one-time, terminated, replaced, or informational?
+```
+
+The purpose is to increase deterministic coverage without weakening safety.
+
+## Priority cases
+
+Use these samples as diagnostics, not hardcoded targets:
+
+- `request_01`: variable grocery recurrence
+- `request_13`: multiple/distinct household income streams
+- `request_21`: singleton investment classification
+- `request_25`: ambiguous transport cadence
+
+Also inspect any newly exposed unsupported requests with recurrence-related diagnostics.
+
+Do not optimize directly to expected answers.
+
+## 1. Introduce explicit recurring-stream identity
+
+Define deterministic stream identity from supported structured evidence.
+
+Candidate dimensions may include:
+
+- user
+- direction
+- cash/non-cash classification
+- category/subcategory
+- merchant/payee/payer identity if available
+- transaction description/label
+- lifecycle identity
+- recurrence metadata
+- other structured identifiers in the dataset
+
+Do not automatically group events solely because they share a broad category such as:
+```text
+income + salary
+expense + groceries
+expense + transport
+```
+
+if the structured data supports distinguishing separate streams.
+
+Document the exact identity rules.
+
+Add tests showing:
+
+- two genuinely separate salary streams remain separate
+- the same recurring expense is grouped correctly
+- unrelated expenses in the same broad category do not merge
+- lifecycle-linked representations do not create duplicate streams
+
+## 2. Model stream continuation explicitly
+
+A recurring stream should have an explicit continuation state such as conceptually:
+```text
+continuing
+terminated
+superseded
+one_time
+insufficient_evidence
+```
+
+Use repository-supported evidence wherever available.
+
+Examples may include:
+
+- terminal/final payroll markers
+- explicit future events
+- lifecycle replacements
+- end dates
+- message-derived state later, but not yet
+- structured recurrence indicators
+
+Do not infer continuation simply because a historical event exists.
+
+Likewise, do not terminate a stream without evidence.
+
+Preserve `insufficient_evidence` when appropriate.
+
+## 3. Improve recurrence detection
+
+Replace or refine the current simple recurrence heuristics with deterministic cadence inference.
+
+Support only cadences justified by data, such as:
+
+- weekly
+- biweekly
+- monthly
+- repeated calendar-day patterns
+- other clearly repeated structured intervals
+
+Do not invent exotic recurrence patterns.
+
+For each inferred stream, retain diagnostics including:
+```text
+source event IDs
+observed dates
+observed intervals
+chosen cadence
+confidence/reason
+continuation state
+amount policy
+next projected dates
+```
+
+Cadence inference must remain deterministic.
+
+Add boundary tests for:
+
+- exact weekly recurrence
+- exact biweekly recurrence
+- monthly calendar recurrence
+- slight date drift where justified
+- clearly inconsistent cadence
+- insufficient observations
+- explicit future occurrence replacing inferred occurrence
+
+## 4. Separate cadence inference from amount estimation
+
+Do not couple:
+```text
+does this repeat?
+```
+
+with:
+```text
+how much will it be?
+```
+
+Represent them as separate policy decisions.
+
+For variable recurring streams, investigate reasonable deterministic estimators supported by the challenge data.
+
+Potential policies may include:
+
+- latest amount
+- median
+- conservative max for expenses
+- conservative min for income
+
+Do not choose an estimator merely because it makes sample labels match.
+
+Use solved samples only as external validation after defining the general rule.
+
+Record which estimators remain provisional.
+
+## 5. Formalize one-time event eligibility
+
+Create a deterministic classification for events that should NOT automatically recur.
+
+Examples include conceptually:
+
+- investment purchase
+- one-time transfer
+- isolated refund
+- isolated large purchase
+- informational valuation
+- one-off income
+- settlement representation of an earlier authorization
+
+Use the repository schema and examples to derive the rule.
+
+A single observed event should not become recurring merely because it belongs to a recurring-looking category.
+
+Add tests proving singleton events do not recur without evidence.
+
+This is particularly important for `request_21`.
+
+## 6. Revisit variable grocery/transport streams
+
+For expenses such as groceries and transport, distinguish:
+```text
+recurring spending behavior
+```
+
+from:
+```text
+fixed recurring transaction
+```
+
+If the repository implies that historical flexible spending should continue in the baseline forecast, implement a deterministic policy for estimating it.
+
+If this remains ambiguous, document the ambiguity and keep the request unsupported rather than inventing policy.
+
+Do not lower standards merely to process `request_01` or `request_25`.
+
+## 7. Household income streams
+
+For `request_13`, determine whether multiple income sources can be identified deterministically.
+
+Do not merge separate employers/payers into one salary stream when the data distinguishes them.
+
+Likewise, cessation of one stream must not terminate unrelated income streams.
+
+Add focused tests for:
+
+- two active income streams
+- one active + one terminated stream
+- one variable income stream
+- independent recurrence schedules
+
+## 8. Forecast integration
+
+Keep architecture layered:
+```text
+raw events -> normalization -> lifecycle reconciliation -> stream classification -> cadence + continuation + amount policy -> forecast timeline -> planning
+```
+
+Forecasting should consume resolved stream projections rather than rediscover recurrence itself.
+
+If recurrence logic currently lives inside `forecast.py`, extract it cleanly where useful.
+
+Do not over-engineer abstractions.
+
+## 9. Preserve conservative behavior
+
+If a material stream remains unresolved:
+
+- produce a controlled unsupported diagnostic
+- identify the unresolved stream
+- identify which property is unresolved:
+  - identity
+  - cadence
+  - continuation
+  - amount
+  - classification
+
+Do not silently omit uncertain expenses.
+
+Do not silently include uncertain income.
+
+For safety:
+
+- uncertain income should not increase capacity
+- unresolved essential/recurring expenses should not disappear from the forecast without explicit policy
+
+## 10. Evaluation loop
+
+After implementation run:
+```bash
+python3 -B code/evaluation/main.py --request-id request_01
+python3 -B code/evaluation/main.py --request-id request_13
+python3 -B code/evaluation/main.py --request-id request_21
+python3 -B code/evaluation/main.py --request-id request_25
+python3 -B code/evaluation/main.py --all
+```
+
+Preserve prior evaluation artifacts.
+
+Compare against `deterministic-core-v2-final`.
+
+Report:
+
+- processed
+- unsupported
+- failed
+- fully matching rows
+- per-field accuracy
+- comparable financial mismatches
+- newly processed cases
+- newly incorrect cases
+- remaining recurrence-related blockers
+
+An increase in processed requests is only a success if comparable correctness does not materially regress.
+
+## 11. Tests
+
+Add synthetic unit/regression tests for every general rule introduced.
+
+Prefer small independent scenarios.
+
+At minimum cover:
+
+- distinct stream identity
+- active vs terminated streams
+- singleton event not recurring
+- weekly recurrence
+- biweekly recurrence
+- monthly recurrence
+- cadence ambiguity
+- separate cadence vs amount estimation
+- explicit future occurrence suppressing inferred duplicate
+- multiple salary streams
+- one terminated salary among active streams
+- variable expense handling
+- uncertain income excluded from capacity
+- unresolved material expense blocks unsafe forecasting
+
+Keep all existing tests passing.
+
+## 12. Documentation
+
+Update:
+
+- `docs/tasks.md`
+- `docs/decisions.md` for material recurrence policies
+- `docs/design.md` if stream classification becomes a distinct component
+
+Clearly distinguish:
+
+- repository-confirmed rules
+- deterministic interpretations supported by samples
+- provisional heuristics
+
+If a previous `vertical-slice-v1` assumption is replaced, mark it superseded.
+
+## Scope constraints
+
+Do NOT:
+
+- implement AI/message/image extraction
+- hardcode request IDs
+- tune thresholds to individual expected outputs
+- implement installment/partial-payment strategies unless required by a newly processed case and already fully supported by existing deterministic contracts
+- modify datasets
+- generate final root `output.csv`
+- commit or push
+
+Do not sacrifice conservative financial behavior just to increase the number of processed samples.
+
+## Definition of done
+
+This milestone is complete when:
+
+1. recurring streams have explicit identity
+2. continuation/cessation is represented explicitly
+3. cadence inference is isolated and deterministic
+4. cadence and amount estimation are separate
+5. singleton/one-time events do not recur without evidence
+6. multiple income streams can remain independent
+7. recurrence diagnostics are inspectable
+8. all tests pass
+9. all 25 samples are re-evaluated
+10. no request-specific hacks are introduced
+
+At the end report:
+
+1. recurrence/stream model introduced
+2. confirmed vs provisional policies
+3. files changed
+4. new tests and total passing count
+5. results for `request_01`, `13`, `21`, and `25`
+6. before/after baseline metrics
+7. any newly processed-but-wrong requests
+8. remaining recurrence blockers
+9. recommended next priority
+10. whether the deterministic foundation is now mature enough to begin selective AI extraction
+
+Agent Response Summary:
+Introduced a separate deterministic stream-classification layer with explicit transaction and spending-behavior identities, continuation states, cadence inference, independent amount estimation, one-time handling, stale-stream detection, salary-source separation, and detailed projection diagnostics. Added a conservative one-occurrence contingency for variable spending behavior after an intermediate benchmark exposed an unsafe thin-margin prediction; final comparable correctness remains unchanged. All 77 tests pass, and recurring-streams-v1-final has 1 processed, 24 unsupported, 0 failed, 1 fully matching row, and zero comparable financial mismatches. Updated working documentation and README; no AI extraction, dataset mutation, final output, commit, or push occurred.
+
+Actions:
+* Added code/buy_or_wait/streams.py and tests/test_streams.py.
+* Updated forecast.py, pipeline.py, reconciliation.py and focused existing tests.
+* Updated docs/design.md, docs/tasks.md, docs/decisions.md, and README.md.
+* Ran 77 tests successfully and git diff --check.
+* Preserved targeted and full evaluation artifacts under artifacts/evaluation/recurring-streams-v1-final*.
+* Removed generated scripts/__pycache__; did not modify datasets, .env, or .gitignore.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

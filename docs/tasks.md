@@ -2,17 +2,16 @@
 
 ## Current phase
 
-Targeted deterministic correctness/reconciliation milestone complete; baseline-v1 and final deterministic-core-v2 evaluation preserved. Awaiting user review; no AI extraction.
+Recurring-stream identity/continuation milestone complete. `recurring-streams-v1-final` preserves comparable correctness; no AI extraction.
 
 ## In progress
 
-- None; targeted milestone complete.
+- None; recurrence milestone complete and awaiting review.
 
 ## Next
 
-- [ ] Review v1 trace and v2 comparison before further implementation.
-- [ ] Define evidence-based recurring-stream identity/termination and one-time-event eligibility, including household income and investment contributions.
-- [ ] Investigate conservative expense-policy limitations and general safe-capacity behavior; do not tune to sample IDs.
+- [ ] Implement baseline capacity and later/partial/installment/spending-change planning on the resolved forecast.
+- [ ] Decide whether to expand deterministic message parsing or begin the narrow evidence extraction contract.
 
 ## Completed
 
@@ -42,13 +41,18 @@ Targeted deterministic correctness/reconciliation milestone complete; baseline-v
 - [x] Add exact settlement-date FX conversion after scope assessment; leave household income identity and transport cadence unresolved.
 - [x] Pass 65 tests (19 new regressions); run all requested targeted evaluations and final 25-sample run without further mismatch patches.
 - [x] Record v2: 1 processed, 24 unsupported, 0 failed, 1 matching row; comparable financial mismatches 5 -> 0 because the false-positive output is withheld.
+- [x] Add explicit transaction/behavior stream identities, independent salary sources, and lifecycle-safe source membership.
+- [x] Add continuation states, stale/missing-occurrence detection, deterministic cadence inference, and separate amount estimation.
+- [x] Classify singleton history as one-time; exclude uncertain income and block unresolved recurring expenses.
+- [x] Add behavior-stream contingency reserves and inspectable stream diagnostics; pass 77 tests.
+- [x] Record `recurring-streams-v1-final`: 1 processed, 24 unsupported, 0 failed, 1 matching, zero comparable mismatches.
 
 ## Blocked / needs decision
 
 - [x] Obtain implementation authorization for the vertical slice only.
 - [x] User authorized explicit provisional recurrence and conservative same-day ordering.
 - [ ] Resolve opening-balance timing, pending-hold treatment, horizon boundaries, and same-day ordering before the full financial engine.
-- [ ] Specify recurrence/conservative-spending policies and amendment scope before forecasting implementation.
+- [ ] Validate provisional behavior categories, one-occurrence contingency, cadence tolerance, and min/max amount estimators against broader evidence.
 - [ ] Resolve installment duration, deadline/status edge cases, and recurring spending-change targeting before complete planning.
 - [ ] Fix rounding/tie-break conventions and cached-usage accounting before release; see [decisions.md](decisions.md).
 

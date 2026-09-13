@@ -45,6 +45,7 @@ def run(request_path: Path, dataset: Path, output: Path,
             "policy": asdict(policy), "request_id": context.request.request_id,
             "opening_balance": timeline.opening_balance, "reserve": timeline.minimum_balance,
             "entries": [asdict(e) for e in timeline.entries],
+            "streams": [asdict(stream) for stream in timeline.streams],
             "baseline": asdict(baseline), "immediate_full_candidate": asdict(candidate),
             "uncapped_headroom": baseline.minimum_balance - timeline.minimum_balance,
             "capped_capacity": min(context.request.requested_amount, max(Decimal("0"), baseline.minimum_balance - timeline.minimum_balance))})

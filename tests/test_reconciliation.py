@@ -34,7 +34,7 @@ class TerminalPayrollTest(unittest.TestCase):
 
     def test_marker_is_exact_not_substring_guess(self):
         salary = self.salary()
-        ctx = context(salary[:-1] + (replace(salary[-1], description="Not final employer payroll"),))
+        ctx = context(tuple(replace(item, description="Not final employer payroll") for item in salary))
         self.assertEqual(ended_streams(ctx), ())
         self.assertEqual(sum(e.amount for e in build_forecast(ctx).entries), Decimal("300"))
 
@@ -42,8 +42,8 @@ class TerminalPayrollTest(unittest.TestCase):
         salary = self.salary()
         ctx = context(salary[:-1] + (replace(salary[-1], description="Final employer payroll"),
                       event("future", date(2026, 4, 15), "100", direction="credit", status="scheduled")))
-        with self.assertRaisesRegex(UnsupportedCase, "Income after terminal"):
-            ended_streams(ctx)
+        with self.assertRaisesRegex(UnsupportedCase, "terminated payroll"):
+            build_forecast(ctx)
 
 
 class NonCashTest(unittest.TestCase):

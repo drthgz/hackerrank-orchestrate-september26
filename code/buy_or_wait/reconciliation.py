@@ -32,12 +32,6 @@ def ended_streams(context: FinancialContext) -> tuple[StreamEnd, ...]:
                 and event.description.strip().casefold() == "final employer payroll"):
             if event.settlement_date is None:
                 raise UnsupportedCase("Terminal payroll lacks a settlement date")
-            if any(stream_key(other) == stream_key(event)
-                   and other.status in {"settled", "scheduled", "pending"}
-                   and other.settlement_date is not None
-                   and other.settlement_date > event.settlement_date
-                   for other in context.events):
-                raise UnsupportedCase("Income after terminal payroll needs stream/source reconciliation")
             ends.append(StreamEnd(stream_key(event), event.settlement_date,
                                   (event.source.source_id,), "Explicit final employer payroll ends this stream"))
     return tuple(ends)

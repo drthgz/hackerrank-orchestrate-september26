@@ -127,7 +127,7 @@ class EvaluationTest(unittest.TestCase):
         self.assertEqual(metrics["selected_requests"], 2)
         self.assertEqual(metrics["successfully_processed"], 1)
         self.assertEqual(metrics["unsupported_requests"], 1)
-        self.assertEqual(results[0]["failure_stage"], "forecast")
+        self.assertEqual(results[0]["failure_stage"], "planning")
         self.assertEqual(results[1]["validation"], "passed")
         with (directory / "mismatches.csv").open() as stream:
             mismatches = list(csv.DictReader(stream))

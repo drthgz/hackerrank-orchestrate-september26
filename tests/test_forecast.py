@@ -46,8 +46,8 @@ class ForecastTest(unittest.TestCase):
         self.assertEqual(timeline.end, date(2026, 7, 2))
 
     def test_single_occurrence_is_unresolved(self):
-        with self.assertRaisesRegex(UnsupportedCase, "at least three"):
-            build_forecast(context(self.history()[:1]))
+        # A singleton is classified as one-time and never projected.
+        self.assertEqual(build_forecast(context(self.history()[:1])).entries, ())
 
     def test_ambiguous_cadence_is_unresolved(self):
         events = self.history()[:2] + (event("last", date(2026, 3, 9)),)
@@ -59,8 +59,7 @@ class ForecastTest(unittest.TestCase):
             history = tuple(replace(e, amount=Decimal(a)) for e, a in zip(self.history(direction), ("9", "10", "11")))
             self.assertTrue(all(e.amount == expected for e in build_forecast(context(history)).entries))
         history = self.history()[:2] + (replace(self.history()[2], amount=Decimal("100")),)
-        with self.assertRaisesRegex(UnsupportedCase, "too variable"):
-            build_forecast(context(history))
+        self.assertTrue(all(e.amount == Decimal("-100") for e in build_forecast(context(history)).entries))
 
     def test_explicit_future_replaces_inferred_occurrence(self):
         explicit = event("future", date(2026, 4, 6), "12", status="scheduled")
