@@ -117,6 +117,26 @@ class Evidence:
 
 
 @dataclass(frozen=True)
+class ExtractedFact:
+    fact_type: str
+    value: str | None
+    currency: str | None
+    effective_date: date | None
+    scope: str
+    target_event_id: str | None
+    related_event_ids: tuple[str, ...]
+    category: str | None
+    direction: str | None
+    confidence: str
+    supporting_evidence: str
+    source: Source
+    provider: str
+    model: str
+    prompt_version: str
+    schema_version: str
+
+
+@dataclass(frozen=True)
 class FxRate:
     settlement_date: date
     from_currency: str
@@ -132,6 +152,7 @@ class FinancialContext:
     options: tuple[PaymentOption, ...]
     evidence: tuple[Evidence, ...]
     rates: tuple[FxRate, ...]
+    extracted_facts: tuple[ExtractedFact, ...] = ()
 
 
 @dataclass(frozen=True)

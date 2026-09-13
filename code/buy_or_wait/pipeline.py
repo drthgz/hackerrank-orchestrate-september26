@@ -11,6 +11,7 @@ from .reconciliation import reconcile
 from .diagnostics import reconciliation_diagnostic, write_diagnostic
 from .loading import build_context, load_requests
 from .normalize import normalize
+from .extraction import ExtractionConfig, PROMPT_VERSION, SCHEMA_VERSION, extract
 from .output import write_predictions
 from .planning import plan
 from .validation import validate_output
@@ -26,13 +27,30 @@ def _stage(name, operation, *args):
 
 
 def run(request_path: Path, dataset: Path, output: Path,
-        policy: ForecastPolicy = ForecastPolicy()) -> tuple[Prediction, ...]:
+        policy: ForecastPolicy = ForecastPolicy(),
+        extraction_config: ExtractionConfig = ExtractionConfig(),
+        usage_sink: list | None = None) -> tuple[Prediction, ...]:
     root = dataset.resolve().parent
     target = output.resolve()
     if target == root / "output.csv" or target == request_path.resolve() or target.is_relative_to(dataset.resolve()):
         raise ValueError("Development output cannot overwrite input data or final output.csv")
     inputs = _stage("loading", load_requests, request_path)
-    contexts = tuple(_stage("normalization", normalize, _stage("context", build_context, dataset, r)) for r in inputs)
+    contexts = []
+    for index, request in enumerate(inputs):
+        raw = _stage("context", build_context, dataset, request)
+        extracted = _stage("extraction", extract, raw, dataset, extraction_config, usage_sink)
+        normalized = _stage("normalization", normalize, extracted.context)
+        _stage("serialization", write_diagnostic,
+               output.parent / "diagnostics" / str(index) / "extraction.json", {
+                   "request_id": request["request_id"],
+                   "mode": extraction_config.mode,
+                   "prompt_version": PROMPT_VERSION,
+                   "schema_version": SCHEMA_VERSION,
+                   "cache_keys": extracted.cache_keys,
+                   "facts": [asdict(fact) for fact in normalized.extracted_facts],
+               })
+        contexts.append(normalized)
+    contexts = tuple(contexts)
     predictions = []
     for index, context in enumerate(contexts):
         resolved = _stage("reconciliation", reconcile, context)

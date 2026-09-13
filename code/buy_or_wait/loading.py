@@ -56,6 +56,7 @@ class RawContext:
     messages: tuple[dict[str, str], ...]
     images: tuple[dict[str, str], ...]
     rates: tuple[dict[str, str], ...]
+    extracted_facts: tuple[dict, ...] = ()
 
 
 def build_context(dataset: Path, request: dict[str, str]) -> RawContext:

@@ -41,4 +41,4 @@ class UsageLedger:
         totals["estimated_cost"] = format(cost, "f") if cost is not None else None
         return {"records": [{"provider": r.provider, "model": r.model, **{name: getattr(r, name) for name in counters},
                               "estimated_cost": format(r.estimated_cost, "f") if r.estimated_cost is not None else None} for r in self.records],
-                "totals": totals, "note": "No model or extraction implementation is invoked by the current pipeline."}
+                "totals": totals, "note": "Counters are measured per extraction request; unavailable costs remain null."}

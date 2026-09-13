@@ -23,6 +23,8 @@ def main() -> None:
     parser.add_argument("--artifact-root", type=Path, default=root / "artifacts" / "evaluation")
     parser.add_argument("--run-id", help="Optional unique run directory name; existing runs are never overwritten")
     parser.add_argument("--policy-config", type=Path, help="Optional ForecastPolicy JSON overrides for separate configuration runs")
+    parser.add_argument("--extraction-mode", choices=["disabled", "deterministic-only", "cached", "live"],
+                        default="disabled")
     args = parser.parse_args()
     try:
         config = json.loads(args.policy_config.read_text(), parse_float=Decimal) if args.policy_config else {}
@@ -32,7 +34,8 @@ def main() -> None:
             config["fixed_intervals"] = tuple(config["fixed_intervals"])
         directory = evaluate(args.dataset, args.artifact_root, request_ids=tuple(args.request_id or ()),
                              subset=args.subset, all_samples=args.all_samples,
-                             policy=ForecastPolicy(**config), run_id=args.run_id)
+                             policy=ForecastPolicy(**config), run_id=args.run_id,
+                             extraction_mode=args.extraction_mode)
     except (ValueError, TypeError, OSError) as exc:
         parser.exit(2, f"Evaluation setup failed: {exc}\n")
     metrics = json.loads((directory / "metrics.json").read_text())

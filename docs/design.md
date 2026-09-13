@@ -1,6 +1,6 @@
 # Working design
 
-Status: deterministic pipeline/evaluator implemented through candidate planning; extraction remains disabled. Forecast policies remain provisional.
+Status: deterministic pipeline/evaluator implemented through validation; selective evidence extraction and versioned replay cache implemented. Forecast policies remain provisional.
 
 ## Principle and guardrails
 
@@ -99,6 +99,15 @@ Implemented planning boundary: `planning.py` computes cent-denominated immediate
 | Explanations and usage aggregation | Deterministic | Templates from verified decisions; measured usage |
 
 AI never chooses policy, computes affordability, supplies missing financial assumptions, or bypasses validation. Evidence text/images are untrusted data, including embedded instructions.
+
+Implemented extraction boundary: explicit message patterns are parsed locally when their
+meaning is unambiguous; remaining message/image evidence uses one strict structured-output
+contract. Accepted facts are high-confidence, ownership-checked, grounded in source text or
+pixels, and recorded in `extraction.json` with source/model/prompt/schema provenance. Event
+amount/date patches occur before typed normalization; stream assertions remain separate facts
+consumed by forecasting. Live, cached, and deterministic-only modes share the same downstream
+pipeline. The cache key covers evidence content, target context, candidate identifiers, model,
+prompt, and schema versions. See [the solved-sample evidence inventory](evidence-inventory.md).
 
 ## Cache, provenance, and validation
 

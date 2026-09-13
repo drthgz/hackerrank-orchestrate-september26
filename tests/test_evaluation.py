@@ -105,7 +105,7 @@ class EvaluationTest(unittest.TestCase):
         altered = Sample(dict(selected.inputs), {key: selected.expected[key] if key == "request_id" else "ANSWER_SENTINEL" for key in OUTPUT_COLUMNS})
         observed = []
 
-        def spy(input_path, dataset, output, policy):
+        def spy(input_path, dataset, output, policy, extraction_config, usage_sink):
             with input_path.open() as stream:
                 reader = csv.DictReader(stream)
                 self.assertEqual(tuple(reader.fieldnames), REQUEST_COLUMNS)
@@ -113,7 +113,7 @@ class EvaluationTest(unittest.TestCase):
             self.assertNotIn("ANSWER_SENTINEL", input_path.read_text())
             self.assertEqual(row, selected.inputs)
             observed.append(True)
-            return actual_pipeline(input_path, dataset, output, policy)
+            return actual_pipeline(input_path, dataset, output, policy, extraction_config, usage_sink)
 
         with patch("evaluation.runner.load_samples", return_value=(altered,)), patch("evaluation.runner.run_pipeline", side_effect=spy):
             changed = evaluate(self.dataset, self.artifacts, request_ids=("request_09",), run_id="changed")
@@ -183,9 +183,11 @@ class EvaluationTest(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             evaluate(self.dataset, self.artifacts, request_ids=("request_09",), run_id="first")
 
-    def test_live_extraction_not_silently_simulated(self):
-        with self.assertRaisesRegex(ValueError, "not implemented"):
-            evaluate(self.dataset, self.artifacts, request_ids=("request_09",), extraction_mode="live")
+    def test_live_mode_without_evidence_truthfully_makes_no_call(self):
+        directory = evaluate(self.dataset, self.artifacts, request_ids=("request_09",),
+                             extraction_mode="live", run_id="live-no-evidence")
+        usage = json.loads((directory / "usage.json").read_text())
+        self.assertEqual(usage["totals"]["model_calls"], 0)
 
 
 if __name__ == "__main__":

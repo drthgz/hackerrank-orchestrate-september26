@@ -95,7 +95,10 @@ def build_forecast(context: FinancialContext | ResolvedContext,
     # as its own stage and passes a ResolvedContext. No lifecycle logic lives here.
     resolved = context if isinstance(context, ResolvedContext) else reconcile(context)
     context = resolved.context
-    if context.evidence:
+    resolved_evidence = {fact.source.source_id for fact in context.extracted_facts}
+    unresolved_evidence = [item.source.source_id for item in context.evidence
+                           if item.source.source_id not in resolved_evidence]
+    if unresolved_evidence:
         raise UnsupportedCase("Uninterpreted messages/images require later extraction")
     if any(e.amount is None for e in resolved.events):
         raise UnsupportedCase("Missing financial amount remains unresolved")
@@ -155,17 +158,40 @@ def build_forecast(context: FinancialContext | ResolvedContext,
                                          f"behavior-contingency:{stream.identity.diagnostic_id()}",
                                          stream.source_event_ids + rate_sources,
                                          f"behavior_contingency:{stream.amount_policy}"))
-        for when in stream.next_projected_dates:
+        for occurrence_index, when in enumerate(stream.next_projected_dates):
             broad = (stream.identity.event_type, stream.identity.category,
                      stream.identity.direction, stream.identity.currency, when)
             if broad in explicit_occurrences:
                 continue
+            amount = stream.amount
+            amendment_sources = ()
+            terminated = False
+            for fact in context.extracted_facts:
+                matches = (fact.category == stream.identity.category
+                           and fact.direction == stream.identity.direction)
+                if not matches:
+                    continue
+                if (fact.fact_type == "stream_termination" and fact.effective_date is not None
+                        and when >= fact.effective_date):
+                    terminated = True
+                effective = fact.effective_date is None or when >= fact.effective_date
+                selected_occurrence = (fact.scope == "ongoing" or
+                                       (fact.scope == "one_occurrence" and occurrence_index == 0))
+                if fact.fact_type == "stream_amount" and effective and selected_occurrence:
+                    amount = Decimal(fact.value)
+                    amendment_sources += (fact.source.source_id,)
+                if fact.fact_type == "stream_percent_change" and effective and selected_occurrence:
+                    factor = Decimal("1") + Decimal(fact.value) / Decimal("100")
+                    amount = amount * factor
+                    amendment_sources += (fact.source.source_id,)
+            if terminated:
+                continue
             sign = Decimal("-1") if stream.identity.direction == "debit" else Decimal("1")
-            converted, rate_sources = to_home(stream.amount, stream.identity.currency,
+            converted, rate_sources = to_home(amount, stream.identity.currency,
                                               context.profile.currency, when, context.rates)
             entries.append(ForecastEntry(when, sign * converted,
                                          f"inferred:{stream.identity.diagnostic_id()}:{when}",
-                                         stream.source_event_ids + rate_sources,
+                                         stream.source_event_ids + amendment_sources + rate_sources,
                                          f"recurrence:{stream.cadence.name}:{stream.amount_policy}"))
     for release in resolved.reservation_releases:
         if start <= release.date <= end:

@@ -2,16 +2,20 @@
 
 ## Current phase
 
-Deterministic planning milestone complete. `planning-v1-final` processes all structured-only samples; no AI extraction.
+Selective evidence extraction milestone complete; cached 25-sample benchmark verified.
 
 ## In progress
 
-- None; planning milestone complete and awaiting review.
+- [x] Inventory all 19 solved-sample evidence requirements without using expected outputs.
+- [x] Add deterministic-first message parsing and narrow message/image fact extraction.
+- [x] Add versioned cache, provenance diagnostics, controlled failures, and measured usage.
+- [x] Run representative live extraction and populate the solved-sample cache.
+- [x] Review final cached benchmark artifact and extraction/downstream failure split.
 
 ## Next
 
-- [ ] Review planning benchmark mismatches, especially forecast-policy differences in requests 01/13/21.
-- [ ] Begin the narrow cached evidence-extraction contract after review.
+- [ ] Analyze deterministic downstream mismatches without changing extraction contracts.
+- [ ] Resolve request_17 duplicate-date spending behavior as a focused deterministic task.
 
 ## Completed
 
@@ -51,6 +55,10 @@ Deterministic planning milestone complete. `planning-v1-final` processes all str
 - [x] Add independent candidate eligibility, simulation, ranking, rejection diagnostics, and planning artifacts.
 - [x] Add 13 planning tests; all 90 tests pass.
 - [x] Record `planning-v1-final`: 6 processed, 19 unsupported, 0 failed, 1 fully matching row.
+- [x] Add typed extracted facts, strict schema grounding, user/event ownership checks, and source/model/version provenance.
+- [x] Add `live`, `cached`, and `deterministic-only` evaluator modes with real usage and cache accounting.
+- [x] Add message/image fixtures and regression coverage; live model calls remain outside unit tests.
+- [x] Record `selective-extraction-v2-final-cached-verified`: 24 processed, 1 forecast-unsupported, 0 failed, 1 fully matching row; zero model calls and 10 cache hits.
 
 ## Blocked / needs decision
 

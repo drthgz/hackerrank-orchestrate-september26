@@ -14,10 +14,11 @@ from uuid import uuid4
 
 from buy_or_wait.domain import OUTPUT_COLUMNS, UnsupportedCase
 from buy_or_wait.forecast import ForecastPolicy
+from buy_or_wait.extraction import ExtractionConfig
 from buy_or_wait.pipeline import run as run_pipeline
 from .comparison import STRUCTURED_FIELDS, compare_prediction
 from .samples import load_samples, select_samples, write_input
-from .usage import UsageLedger
+from .usage import ModelUsage, UsageLedger
 
 MISMATCH_COLUMNS = ("request_id", "field", "expected", "actual", "details", "failure_stage", "diagnostic", "policy_version", "kind")
 
@@ -78,10 +79,8 @@ def evaluate(dataset: Path, artifact_root: Path, *, request_ids: tuple[str, ...]
              subset: str | None = None, all_samples: bool = False,
              policy: ForecastPolicy = ForecastPolicy(), run_id: str | None = None,
              extraction_mode: str = "disabled") -> Path:
-    # Future live/cached implementations can supply the same pipeline interface.
-    # Do not pretend those modes exist or fabricate cache activity today.
-    if extraction_mode != "disabled":
-        raise ValueError("Extraction is not implemented; only disabled mode is currently supported")
+    if extraction_mode not in {"disabled", "deterministic-only", "cached", "live"}:
+        raise ValueError("Invalid extraction mode")
     selected = select_samples(load_samples(dataset / "sample_requests.csv"), request_ids, subset, all_samples)
     if not selected:
         raise ValueError("Empty evaluation selection")
@@ -94,7 +93,7 @@ def evaluate(dataset: Path, artifact_root: Path, *, request_ids: tuple[str, ...]
     directory = artifact_root / run_id
     directory.mkdir(parents=True, exist_ok=False)
     results, mismatches, predicted_rows = [], [], []
-    usage = UsageLedger()  # No model calls or extraction in the current pipeline.
+    usage = UsageLedger()
     for index, sample in enumerate(selected):
         rid = sample.inputs["request_id"]
         request_dir = directory / "requests" / f"{index:04d}"
@@ -106,12 +105,16 @@ def evaluate(dataset: Path, artifact_root: Path, *, request_ids: tuple[str, ...]
                   "explanation_exact_match": None, "explanation_consistency": "not_assessed",
                   "comparisons": []}
         stage = "loading"
+        measured_usage = []
         try:
             write_input(input_path, sample.inputs)
             stage = "unknown"
             # The only application arguments are input-only paths and policy.
             # Never pass Sample or expected answers to application code.
-            run_pipeline(input_path, dataset, output_path, policy)
+            run_pipeline(input_path, dataset, output_path, policy,
+                         ExtractionConfig(mode=extraction_mode,
+                                          cache_dir=artifact_root.parent / "extraction-cache"),
+                         measured_usage)
             stage = "serialization"
             with output_path.open(encoding="utf-8", newline="") as stream:
                 reader = csv.DictReader(stream)
@@ -146,6 +149,11 @@ def evaluate(dataset: Path, artifact_root: Path, *, request_ids: tuple[str, ...]
                                    "details": json.dumps({"reason": "no_prediction", "absolute_error": None}),
                                    "failure_stage": failure_stage, "diagnostic": str(exc), "policy_version": policy.version,
                                    "kind": "missing_prediction"})
+        finally:
+            for item in measured_usage:
+                usage.record(ModelUsage(item.provider, item.model, item.model_calls,
+                                        item.input_tokens, item.output_tokens, item.retries,
+                                        item.cache_hits, item.cache_misses, item.estimated_cost))
         results.append(result)
     with (directory / "predictions.csv").open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=OUTPUT_COLUMNS, lineterminator="\n")
@@ -172,7 +180,7 @@ def evaluate(dataset: Path, artifact_root: Path, *, request_ids: tuple[str, ...]
                 "git_commit": commit,
                 "source_sha256": _fingerprint(list((root / "code").rglob("*.py")) + list((root / "scripts").glob("*.py")), root),
                 "dataset_sha256": _fingerprint(list(dataset.rglob("*.csv")) + list(dataset.rglob("*.png")), dataset),
-                "extraction_mode": extraction_mode, "extraction_implemented": False,
+                "extraction_mode": extraction_mode, "extraction_implemented": True,
                 "application_input_boundary": "requests/*/input.csv contains exactly request input columns; answers are evaluator-only"}
     (directory / "metadata.json").write_text(_json(metadata), encoding="utf-8")
     return directory

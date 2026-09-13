@@ -4,7 +4,7 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from .domain import (DataError, Event, Evidence, FinancialContext, FxRate, Method,
+from .domain import (DataError, Event, Evidence, ExtractedFact, FinancialContext, FxRate, Method,
                      PaymentOption, Profile, Request, Source)
 from .loading import RawContext
 
@@ -84,4 +84,18 @@ def normalize(raw: RawContext) -> FinancialContext:
     for e in events:
         if e.currency != profile.currency and e.status in {"settled", "pending", "scheduled"} and (e.settlement_date, e.currency, profile.currency) not in keys:
             raise DataError(f"{e.event_id}: missing settlement-date FX rate")
-    return FinancialContext(request, profile, tuple(events), tuple(options), evidence, rates)
+    facts = []
+    event_ids = {event.event_id for event in events}
+    for fact in raw.extracted_facts:
+        target = fact["target_event_id"]
+        related = tuple(fact["related_event_ids"])
+        if (target and target not in event_ids) or any(item not in event_ids for item in related):
+            raise DataError("Extracted fact targets an unknown event")
+        facts.append(ExtractedFact(
+            fact["fact_type"], fact["value"], fact["currency"],
+            day(fact["effective_date"]) if fact["effective_date"] else None,
+            fact["scope"], target, related, fact["category"], fact["direction"],
+            fact["confidence"], fact["evidence"],
+            Source(fact["source_type"], fact["source_id"]), fact["provider"], fact["model"],
+            fact["prompt_version"], fact["schema_version"]))
+    return FinancialContext(request, profile, tuple(events), tuple(options), evidence, rates, tuple(facts))

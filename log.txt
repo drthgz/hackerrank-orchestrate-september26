@@ -2639,3 +2639,34 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## [2026-09-13T03:39:53-05:00] SESSION START
+
+tool=Codex
+Repo Root: /home/shiftmint/hackerrank-orchestrate-september26
+Branch: main
+Worktree: /home/shiftmint/hackerrank-orchestrate-september26
+Parent Agent: none
+Language: py
+Time Remaining: 3h 50m
+
+## [2026-09-13T03:39:53-05:00] Extraction milestone interruption status
+
+User Prompt (verbatim, secrets redacted):
+I don't see the summary. Did you finish extraction feature or were interrupted?
+
+Agent Response Summary:
+Explained that the first full live extraction run was interrupted before a completion summary, then inspected its preserved artifacts and resumed the authorized milestone. Completed the versioned selective evidence boundary, deterministic parsers, cache replay, usage accounting, tests, documentation, and a verified 25-sample cached benchmark. No dataset files, final output, commits, or pushes were produced.
+
+Actions:
+* Inspected and resumed the interrupted live extraction evaluation.
+* Added and tested selective message/image extraction, grounding, provenance, caching, and usage accounting.
+* Ran 102 tests and the final cached 25-sample benchmark.
+* Updated README.md and working documentation.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

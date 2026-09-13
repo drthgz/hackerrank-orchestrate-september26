@@ -2,6 +2,20 @@
 
 Accepted entries identify either confirmed repository rules or agreed engineering choices. Revisit entries are unresolved proposals, not implementation defaults. Sources: [problem statement](../problem_statement.md), [README](../README.md), [AGENTS.md](../AGENTS.md).
 
+## Decision: Narrow versioned evidence extraction
+
+Status: Accepted
+
+Context: Nineteen solved samples contain messages or images that block an otherwise deterministic pipeline.
+
+Decision: Apply explicit deterministic patterns first, then one strict Responses API structured-output contract using `gpt-5-mini`, prompt `evidence-facts-v4`, and schema `evidence-fact-schema-v2`. Accept high-confidence grounded facts only. Cache by evidence content, relevant target/candidate context, model, prompt, and schema. Preserve source and extraction provenance. Model output may amend normalized evidence facts; it cannot forecast, plan, rank, or validate.
+
+Reason: This confines AI to perception/interpretation while making repeated deterministic evaluation reproducible and inexpensive.
+
+Alternatives considered: Per-sample prompts; free-form advice; live extraction on every run; large regex NLP; treating missing facts as zero.
+
+Consequences: Schema or prompt changes invalidate cache entries. Cached runs make zero model calls and report hits. Low-confidence, malformed, conflicting, wrong-owner, or ungrounded facts fail closed. Percentage amendments and one-occurrence stream amounts remain deterministic downstream fact types rather than model-authored policy.
+
 ## Decision: Isolated provisional vertical-slice forecast
 
 Status: Revisit

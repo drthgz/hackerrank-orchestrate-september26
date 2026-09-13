@@ -36,8 +36,28 @@ structural validation. It does not write the final root `output.csv`.
 
 The deterministic pipeline now evaluates full, wait, partial, supplied-installment,
 flexible-spending-change, and not-recommended strategies over `recurring-streams-v1`.
-Unresolved evidence still fails explicitly. No AI calls occur in the application.
+Unresolved evidence still fails explicitly. Selective extraction is opt-in for evaluation;
+financial reasoning remains deterministic.
 See [the decision log](docs/decisions.md) for exact provisional rules.
+
+Run solved-sample evaluation with no model calls using the versioned cache:
+
+```bash
+python3 -B code/evaluation/main.py --request-id request_03 --extraction-mode cached
+python3 -B code/evaluation/main.py --all --extraction-mode cached
+```
+
+Populate missing cache entries with live extraction (requires `OPENAI_API_KEY` or
+`OPENAI_KEY` in the environment or local `.env`):
+
+```bash
+python3 -B code/evaluation/main.py --request-id request_03 --extraction-mode live
+```
+
+`--extraction-mode deterministic-only` permits only explicit local evidence patterns.
+Every run writes predictions, metrics, mismatches, request outcomes, usage, metadata,
+and per-request extraction/reconciliation/forecast/planning diagnostics below
+`artifacts/evaluation/<run-id>/`. Expected sample answers remain evaluator-only.
 
 For an already projected, input-only request file, the application entry point is:
 
