@@ -1,0 +1,555 @@
+## [2026-09-12T21:57:16.581554+00:00] SESSION START
+
+tool=Codex
+Repo Root: /home/shiftmint/hackerrank-orchestrate-september26
+Branch: main
+Worktree: /home/shiftmint/hackerrank-orchestrate-september26
+Parent Agent: none
+Language: py
+Time Remaining: 0d 14h 32m
+
+## [2026-09-12T21:58:13.541409+00:00] Repository inspection and architecture proposal
+
+User Prompt (verbatim, secrets redacted):
+I'm working on "Buy or Wait?" for HackerRank Orchestrate. Here is the link to it: [https://www.hackerrank.com/contests/hackerrank-orchestrate-september26/challenges/buy-or-wait](https://www.hackerrank.com/contests/hackerrank-orchestrate-september26/challenges/buy-or-wait). And a link to the repo in github: [https://github.com/interviewstreet/hackerrank-orchestrate-september26](https://github.com/interviewstreet/hackerrank-orchestrate-september26). I have forked and cloned it to local. I have installed ChatGPT/Codex and Claude Code. You are the primary Engineer and Claude Code will be my Consultant/Advisor that I will invoke for second opinions as needed.
+
+We will dicuss, plan, and design before making any changes. We will take a Spec-Driven Development methodology.
+Ask before you commit anything to the branch. NEVER PUSH COMMITS.
+Do not write implementation code.
+
+This Codex session should have access to the directory and all files. Carefully inspect the repository.
+Analyze this hackathon problem as a senior AI systems engineer.
+
+Identify:
+
+1. core components
+2. agent loop
+3. tools required
+4. data flow
+5. failure modes
+6. evaluation strategy
+
+Then propose a minimal architecture. Let's start.
+
+Agent Response Summary:
+Inspected repository instructions, README, full problem statement, empty code and evaluation placeholders, dataset schemas and counts, solved samples, representative financial events and multilingual messages, and two linked images. Proposed a bounded evidence interpretation workflow with deterministic forecasting, plan selection, validation, and usage accounting, and identified specification ambiguities for discussion. No implementation, commits, or pushes; only the mandatory log was appended. Existing untracked .gitignore lacks log.txt; left unchanged under the user's discussion-only instruction.
+
+Actions:
+* Read local documentation, inspected git status and dataset metadata using read-only shell commands.
+* Opened supplied GitHub URL; HackerRank page could not be retrieved.
+* Viewed two local dataset images without copying their personal information into this log.
+* Appended and verified log.txt entries with tool=Codex.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
+## [2026-09-12] Engineering philosophy and specification design refinement
+
+User Prompt (verbatim, secrets redacted):
+
+
+Excellent work. There is more things I want to revise or address before finalzing the short specification. I'm good on the core components. On the agent loop, I want to put more emphasis the statement "keep behavior deterministic where possible" from the readme. Let's dicuss an engineering philosophy.
+
+
+
+**## Engineering philosophy**
+
+
+
+I want the system designed around this principle:
+
+
+
+**\*\*AI for perception and interpretation; deterministic software for financial reasoning, enforcement, and validation.\*\***
+
+
+
+Use traditional deterministic software whenever the relevant information is already structured and deterministic rules can resolve the problem.
+
+
+
+Use an AI/LLM or multimodal model only where information must be extracted or interpreted from unstructured text or images, or where a clearly defined ambiguity cannot reasonably be resolved with deterministic software.
+
+
+
+Do not treat an LLM as a universal fallback.
+
+
+
+AI components should have narrow, explicit contracts. For example, if an image contains a payroll letter whose amount is missing from structured data, an AI component may extract structured facts from that image. Once normalized facts exist, deterministic code should perform financial calculations and decision-making whenever possible.
+
+
+
+The goals behind this architecture are:
+
+
+
+1\. correctness and reproducibility
+
+2\. lower model cost
+
+3\. lower token usage
+
+4\. lower latency
+
+5\. easier testing
+
+6\. easier debugging
+
+7\. reduced hallucination surface
+
+8\. deterministic enforcement of financial safety constraints
+
+
+
+
+
+**### Data model and joins**
+
+
+
+Explain how the datasets relate to one another.
+
+Identify the keys and relationships needed to construct the complete financial context for a request, including:
+
+- user\_id
+- request\_id
+- event\_id
+- related\_event\_id
+- messages
+- images
+- payment options
+- exchange rates
+
+Call out places where duplicate representations or conflicting information may occur.
+
+### Deterministic vs AI responsibility
+
+Create a table with three columns:
+
+\| Responsibility | Deterministic / AI | Reason |
+
+Classify each major part of the solution.
+
+I expect calculations such as balance reconstruction, forecasting, minimum-balance validation, payment-plan validation, payment-option matching, spending-change validation, and final output validation to remain deterministic unless the specification gives a compelling reason otherwise.
+
+Identify exactly which tasks genuinely require AI or multimodal interpretation.
+
+### Proposed architecture
+
+Propose the simplest architecture that can solve the challenge reliably.
+
+Prefer a controlled pipeline over unnecessary autonomous-agent or multi-agent complexity.
+
+A likely high-level direction is:
+
+structured datasets
+\+
+selective extraction from unstructured messages/images
+↓
+normalized financial facts
+↓
+deterministic financial-state reconstruction
+↓
+deterministic forecasting / affordability engine
+↓
+candidate payment strategies
+↓
+deterministic validation
+↓
+output.csv
+
+Challenge this architecture if the repository indicates a better design.
+
+Clearly define component boundaries and data passed between components.
+
+### Evaluation strategy
+
+I like the idea of 3 complementary layers. Contract checks, financial invariants, and sample evaluations.
+The repository provides 25 solved examples in dataset/sample\_requests.csv.
+
+Design a local evaluation harness before we implement the full solution.
+
+It should eventually be able to:
+
+- run the pipeline against the solved sample requests
+- compare predictions with expected sample outputs
+- report accuracy by output field
+- report individual mismatches
+- distinguish deterministic failures from AI extraction failures where possible
+- run a small subset for fast smoke testing
+- run the entire sample set for milestone evaluation
+- reuse cached AI/model extraction results when only deterministic logic changes
+- support comparing at least two strategies/configurations
+- collect the model usage information required for evaluation/usage\_report.md
+
+Do not build it yet. Describe the design.
+
+### Testing strategy
+
+Separate testing into:
+
+A. deterministic unit tests
+B. solved-sample evaluation
+C. regression tests created from discovered failures
+D. AI extraction tests
+E. final output/schema validation
+
+Identify the highest-value deterministic functions that should have unit tests.
+
+### Likely failure modes
+
+Identify likely hidden-test traps and edge cases, especially around:
+
+- missing amounts
+- image-derived amounts
+- duplicate financial events
+- pending transactions
+- salary settlement dates
+- currency conversion dates
+- minimum balance
+- flexible versus essential spending
+- installment schedules
+- partial payments
+- earliest safe payment date
+- desired completion date
+- messages that modify or clarify structured information
+- conflicting evidence
+- malformed or missing data
+- floating-point / currency precision
+- deterministic reproducibility
+
+Rank the highest-risk issues.
+
+### Development plan
+
+Propose a phased implementation plan optimized for a limited hackathon timeframe.
+
+I want milestones roughly corresponding to:
+
+1. repository understanding
+2. simpliest working end to end pipeline
+3. evaluator
+4. deterministic financial-state engine
+5. baseline end-to-end solution
+6. selective AI/image extraction
+7. sample evaluation
+8. failure analysis
+9. targeted improvement
+10. full-dataset run
+11. output validation
+12. documentation and submission preparation
+
+For each phase, specify the success criterion.
+
+## Important constraints
+
+Do not:
+
+- modify dataset files
+- hardcode sample labels
+- write the final implementation yet
+- add unnecessary frameworks
+- introduce multi-agent architecture simply because this is an AI challenge
+- use live banking or external financial data when the provided datasets are sufficient
+- hardcode API secrets
+- assume blank numeric fields mean zero
+- allow AI-generated financial decisions to bypass deterministic safety validation
+
+If you notice a flaw in my proposed philosophy or architecture, explicitly challenge it and explain why.
+
+At the end, give me:
+
+1. your recommended architecture
+2. the deterministic/AI responsibility table
+3. the proposed evaluator design
+4. the five highest-risk implementation issues
+5. the proposed phased build order
+6. any assumptions that still need verification from the repository
+
+Do not implement anything until this planning and design is complete.
+
+I added the .gitignore and .env files, leave them unchanged for now. The .env file has openAI key that will be used by app being developed. And github willbe used for version control, hence the don't commit to remote. I will create commits on important milestones. I won't touch log.txt, it should work as defined by agent.md as retrieved with files from hackathons main repo.
+
+Agent Response Summary:
+Refined the proposed controlled pipeline around selective AI evidence interpretation and deterministic financial reasoning, with explicit boundaries, joins, evaluator design, test categories, ranked risks, and phased success criteria. Read-only dataset checks confirmed unique primary keys, valid evidence links, complete image coverage for missing amounts, exact supplied installment totals, and explicit day-based intervals. Identified unresolved forecasting and eligibility conventions rather than delegating them to an LLM. No implementation or configuration changes were made; .env was not read and no commits or pushes were performed.
+
+Actions:
+* Ran read-only CSV integrity and schema inspections; corrected a boolean aggregation error in the inspection command.
+* Appended required conversation log; verified tool=Codex.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
+## [2026-09-13T02:54:49.133443+00:00] Establish working engineering documentation
+
+User Prompt (verbatim, secrets redacted):
+Your analysis is aligned with the direction I want to take.
+
+Before implementation begins, establish a lightweight project documentation system that will remain useful throughout the hackathon.
+
+Create:
+```text
+docs/
+├── design.md
+├── plan.md
+├── tasks.md
+└── decisions.md
+```
+
+These are working engineering documents, not polished final documentation.
+
+They should remain concise, actionable, and easy to update.
+
+## Documentation responsibilities
+
+### `docs/design.md`
+
+Capture the current technical design:
+
+- high-level architecture
+- component boundaries
+- data flow
+- normalized internal fact model
+- deterministic vs AI responsibilities
+- extraction boundary
+- caching/provenance approach
+- validation boundary
+- major invariants
+- known architectural risks
+
+Core principle:
+
+**AI for perception and interpretation; deterministic software for financial reasoning, enforcement, ranking, and validation.**
+
+Also record these qualifications:
+
+1. Deterministic does not automatically mean correct. Recurrence, forecasting, and conservative spending policies must be explicit and tested.
+
+2. Fresh AI extraction is not inherently reproducible. Extracted facts should be cached/versioned with provenance.
+
+3. Ambiguity requires a controlled failure path. Missing essential information must remain unresolved rather than becoming zero or being filled by invented LLM policy.
+
+Retain the rule:
+
+**Use deterministic parsers where their coverage is clear; otherwise use one narrow extraction contract.**
+
+### `docs/plan.md`
+
+Capture the phased development plan.
+
+Use these phases:
+
+1. architecture/documentation foundation
+2. minimal vertical slice
+3. evaluation harness
+4. deterministic financial engine
+5. expanded end-to-end pipeline
+6. selective AI/image extraction
+7. full sample benchmark
+8. failure analysis
+9. targeted improvements
+10. full dataset run
+11. final output validation
+12. submission/documentation preparation
+
+For every phase record:
+
+- objective
+- scope
+- success criterion
+- dependencies
+- major risks
+
+Keep this concise.
+
+### `docs/tasks.md`
+
+This is the active execution tracker.
+
+Use sections such as:
+
+- Current phase
+- In progress
+- Next
+- Completed
+- Blocked / needs decision
+
+Tasks should be small and actionable.
+
+Example:
+```text
+- [ ] Select 1–2 simple sample requests for vertical slice
+- [ ] Implement CSV loader
+- [ ] Implement request context builder
+- [ ] Serialize correctly shaped prediction
+- [ ] Add schema validation
+```
+
+Do not fill this file with speculative future subtasks.
+
+Update it as work progresses.
+
+### `docs/decisions.md`
+
+Maintain a lightweight architecture decision log.
+
+For each meaningful decision use:
+```text
+## Decision: <short title>
+
+Status: Accepted / Revisit / Rejected
+
+Context:
+...
+
+Decision:
+...
+
+Reason:
+...
+
+Alternatives considered:
+...
+
+Consequences:
+...
+```
+
+Record only decisions that materially affect correctness, architecture, cost, reproducibility, or evaluation.
+
+Examples include:
+
+- deterministic vs AI responsibility boundaries
+- recurrence policy
+- opening-balance treatment
+- same-day ordering
+- Decimal vs floating point
+- evidence caching
+- unresolved-data behavior
+- candidate ranking
+- FX-date handling
+
+Do not create an entry for trivial implementation choices.
+
+## Testing strategy
+
+Record three primary development testing loops:
+
+### 1. Traditional deterministic unit tests
+
+Test deterministic financial and policy code independently from the model.
+
+### 2. Sample benchmark evaluation
+
+Run:
+```text
+sample_requests.csv
+- pipeline
+- sample predictions
+- evaluator
+- field metrics + mismatches
+```
+
+Expected outputs must stay isolated from the pipeline.
+
+### 3. Adversarial/regression tests
+
+Whenever evaluation reveals a meaningful bug, reduce it into a focused deterministic regression test so later changes cannot reintroduce it.
+
+Pay particular attention to the boundary:
+```text
+AI perception/extraction
+        ↓
+normalized facts
+        ↓
+deterministic resolver
+```
+
+Also retain:
+
+4. reviewed AI extraction tests
+5. final output/schema/financial-safety validation
+
+## Development order
+
+After these documentation files are established, our next milestone will be a minimal vertical slice using one or two simple rows from `dataset/sample_requests.csv`.
+
+The vertical slice should prove:
+```text
+load request
+- build context
+- normalize structured facts
+- minimal deterministic processing
+- produce correctly shaped prediction
+- serialize
+- validate structure
+```
+
+The purpose is plumbing and architecture validation, not full financial correctness.
+
+After that:
+```text
+vertical slice
+- evaluator
+- deterministic financial engine
+- expanded pipeline
+- AI extraction
+```
+
+## Documentation maintenance rule
+
+From this point forward:
+
+- update `tasks.md` whenever a meaningful task is completed or started
+- update `decisions.md` when a material architectural/policy decision is made
+- update `design.md` only when the architecture actually changes
+- update `plan.md` only when milestones or sequencing change
+
+Do not repeatedly rewrite documentation after every small code change.
+
+Do not spend significant time polishing prose.
+
+The documentation exists to improve transparency, project control, reproducibility, and later interview preparation.
+
+## Current task
+
+For this prompt only:
+
+1. create the `docs/` directory
+2. create the four files above
+3. populate them from your prior repository analysis
+4. clearly separate confirmed repository requirements from unresolved assumptions
+5. do not implement application code yet
+6. do not commit or push
+
+When done, report:
+
+- files created
+- brief summary of each
+- unresolved decisions requiring attention
+- whether anything discovered while documenting changes the proposed architecture
+
+Agent Response Summary:
+Created docs/design.md, docs/plan.md, docs/tasks.md, and docs/decisions.md from the agreed architecture and repository analysis. Separated confirmed requirements from unresolved policies, recorded testing loops and maintenance rules, and set the minimal vertical slice as next work without implementing it. No architecture change was needed; application code, datasets, .env, and .gitignore remain unchanged, with no commits or pushes.
+
+Actions:
+* Inspected repository status and existing documentation paths.
+* Created four working Markdown documents and checked their links and required sections.
+* Appended and verified this conversation entry with tool=Codex.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
