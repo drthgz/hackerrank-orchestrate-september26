@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from buy_or_wait.pipeline import run
+from buy_or_wait.forecast import ForecastPolicy
 
 
 def main() -> None:
@@ -17,7 +18,7 @@ def main() -> None:
     except (ValueError, OSError) as exc:
         parser.exit(2, f"Vertical slice failed; no justified prediction: {exc}\n")
     print(f"Processed: {', '.join(p.request_id for p in predictions)}")
-    print("Provisional vertical-slice-v1 forecast; structural validation PASSED")
+    print(f"Provisional {ForecastPolicy().version} forecast; structural validation PASSED")
     print(f"Output: {args.output.resolve()}")
 
 

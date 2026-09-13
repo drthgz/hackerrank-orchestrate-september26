@@ -1,6 +1,6 @@
 # Working design
 
-Status: architecture agreed; financial policies below remain unresolved. Application implementation has not started.
+Status: deterministic pipeline and evaluator implemented; targeted reconciliation/FX support added. Forecast and planning policies below remain provisional.
 
 ## Principle and guardrails
 
@@ -44,8 +44,8 @@ CSV records + selectively interpreted messages/images
 | Loader/context builder | CSVs -> validated request context | IDs, types, ownership, dates; no financial inference |
 | Selective interpreter | Relevant evidence + target context -> extracted facts | Perception and semantics only; bounded retries |
 | Normalizer | Structured records/extractions -> typed facts | Validate values and provenance; preserve unknowns |
-| Resolver | Facts + policy -> opening state, cash events, recurring streams | Deterministic lifecycle and amendment handling |
-| Forecaster | State + explicit policy -> ordered cash-flow timeline | Supported recurrence and conservative expenses |
+| Resolver | Normalized facts -> ResolvedContext (effective events, treatments, stream endings, reservation releases) | Explicit deterministic stage before forecasting; source lineage retained |
+| Forecaster | ResolvedContext + policy -> home-currency cash-flow timeline | Supported recurrence, exact settlement-date FX, conservative expenses |
 | Planner | Timeline + preferences/options -> simulated candidates | Eligibility, changes, capacity, published ranking |
 | Validator/reporter | Candidate + state -> checked prediction/artifacts | Cannot waive failed constraints; explanations use verified facts |
 
@@ -76,6 +76,8 @@ This is a conceptual contract, not a finalized implementation schema.
 | Candidate/decision | Payments, option ID if applicable, spending actions, cost, eligibility/rejection reasons, minimum-balance trace |
 
 Keep raw evidence immutable. Separate extracted assertions from accepted/resolved facts so interpretation and policy application can be debugged independently.
+
+Implemented v2 boundary: normalization accepts typed cash/informational events; reconciliation records each source event as settled, reserved, replaced, inactive, unsettled credit, or informational. It retains distinct refund/sale movements and explicit terminal-payroll facts. Forecast reads effective events and reservation releases; it no longer owns lifecycle rules. Per-request reconciliation and forecast JSON sidecars survive later unsupported planning. FX provenance identifies the supplied settlement-date currency pair. Direct forecast callers retain a compatibility adapter that invokes the same reconciler.
 
 ## Deterministic versus AI
 

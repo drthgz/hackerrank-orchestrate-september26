@@ -39,6 +39,11 @@ class Method(str, Enum):
     NO = "not_recommended"
 
 
+class CashKind(str, Enum):
+    CASH = "cash"
+    INFORMATIONAL = "informational"
+
+
 @dataclass(frozen=True)
 class Source:
     kind: str
@@ -86,6 +91,10 @@ class Event:
     flexibility: str
     minimum_allowed_amount: Decimal | None
     source: Source
+
+    @property
+    def cash_kind(self) -> CashKind:
+        return CashKind.INFORMATIONAL if self.direction == "non_cash" else CashKind.CASH
 
 
 @dataclass(frozen=True)

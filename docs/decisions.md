@@ -4,7 +4,9 @@ Accepted entries identify either confirmed repository rules or agreed engineerin
 
 ## Decision: Isolated provisional vertical-slice forecast
 
-Status: Accepted
+Status: Revisit
+
+Superseded in part by deterministic-core-v2 below. The v1 text and baseline remain historical: ignoring explicit terminal payroll and rejecting valid non_cash/lifecycles were incorrect. Recurrence thresholds and ordering remain provisional and unchanged.
 
 Context: The user authorized narrow provisional forecasting after structured-only sample inspection showed that current balance alone could not justify a 90-day prediction.
 
@@ -190,3 +192,52 @@ Reason: Honest coverage/accuracy reporting, no label leakage, reproducible runs,
 Alternatives considered: Successful-only accuracy; fabricated fallback predictions for unsupported requests; exact string plan/prose matching; attributing a field mismatch automatically to forecasting.
 
 Consequences: Initial baseline-v1 processes 2/25, with 21 unsupported and 2 normalization failures; only 1/25 fully matches. It records 5 comparable financial mismatches, 138 missing fields and 2 prose diagnostics. Explanation semantic consistency is not assessed; structural validation only requires nonempty prose. Expected-answer mutation and answer-sentinel tests confirm expected outputs cannot affect application predictions. Financial logic was not changed to improve this baseline.
+
+## Decision: Deterministic core v2 reconciliation and terminal income
+
+Status: Accepted
+
+Context: Before code changes, the input-only request_05 trace showed v1 invented three future salary credits of 14740 after an event explicitly described as "Final employer payroll". Opening balance 46475.10 and reserve 13100 yielded v1 baseline minimum 41244.92, headroom 28144.92, capped output 15488, and candidate minimum 25756.92. Trace: `artifacts/diagnostics/request_05-v1/trace.json`.
+
+Decision: Treat the exact normalized description "Final employer payroll" on a settled salary event as an explicit stream-ending fact. The narrow parser does not fuzzy-match arbitrary prose or access messages/images. Later salary records conflict with the marker and remain unresolved without source reconciliation. Do not loosen recurrence/expense thresholds. Under unchanged conservative expenses, removing future salary yields minimum 5317.44 and negative headroom; unsafe immediate payment now fails at planning. The sample's 737 remains unexplained by the current expense policy and is not a tuning target.
+
+Reason: Explicit cessation takes precedence over historical extrapolation; no unsupported future income. The output discrepancy was a recurrence/terminal-state error, not the request cap calculation.
+
+Alternatives considered: Tuning expense estimates to 737; continuing salary from history despite explicit termination; forcing not_affordable without complete planning (all rejected).
+
+Consequences: Deterministic parsing of a narrow event-description marker is supported, not general text extraction. The category-level stream identity is still provisional. Unknown descriptions, multiple employment sources, and later conflicting income need future policy work.
+
+## Decision: Typed non-cash events and explicit lifecycle stage
+
+Status: Accepted
+
+Context: Supplied unrealized investment valuations use event_type=investment_valuation and direction=non_cash. Lifecycle links include authorization/settlement, failed retries, refunds, investments, and unresolved duplicate debits.
+
+Decision: Normalize cash versus informational events explicitly, validate known event-type/direction/status combinations, and reject malformed combinations. Add a separate `reconcile(context) -> ResolvedContext` stage with immutable raw events, effective movements, per-event treatment/source lineage, stream endings and reservation releases. Forecast consumes that result. Supported semantics:
+
+- Failed/cancelled predecessor followed by a same-stream active successor: exclude predecessor and retain successor once.
+- Pending to settled: replace the representation once; if settlement is future-dated, preserve at least the old reservation until settlement, releasing a lower final-charge difference only then. A past settlement is already reflected in the opening balance.
+- Debit plus refund/reversal: retain distinct movements; unsettled refunds add no cash and do not release the debit. Historical refunds and investment-sale proceeds are not recurring income.
+- Investment purchase, valuation and sale: keep genuine cash debit/credit distinct; valuation is informational only.
+- A settled debit followed by a potentially duplicate pending debit: no confirmed reversal exists, so retain the additional reservation. Do not delete cash impact based on the link alone.
+- Unknown links, cycles, invalid ordering and multiple replacement successors fail explicitly.
+
+Reason: Confirmed repository cash-state/link semantics require both deduplication and preservation of genuinely distinct movements. A link is not an instruction to delete the earlier transaction.
+
+Alternatives considered: Dropping every linked row; ignoring every unfamiliar event; handling replacements opportunistically in forecasting (rejected).
+
+Consequences: Reconciliation and forecast JSON sidecars preserve provenance even when later planning fails. Snapshot/hold timing and conservative same-day ordering remain explicit provisional conventions. The evaluator's baseline-v1 is preserved; v2 removes normalization failures without claiming unsupported requests are solved.
+
+## Decision: Exact FX conversion; defer multi-source salary policy
+
+Status: Accepted
+
+Context: After the first three priorities, request_13 revealed distinct household income streams and a disappearing second stream. Request_25 instead had exact supplied USD-to-IDR rates for historical/confirmed/projected salary settlement dates.
+
+Decision: Add exact Decimal conversion at each movement's settlement date, including inferred future occurrences. Reserve pending debits today using their stated settlement-date rate; keep FX source keys in provenance. Never use event-date/current/reversed/interpolated rates or invent missing future rates. Mixed-currency stream identity remains unresolved. Defer request_13's stream separation and continuation rules.
+
+Reason: FX direction/date lookup is explicitly defined by the repository and can be added independently; household employment continuation requires new policy design.
+
+Alternatives considered: Latest-rate reuse; converting historical salary once then reusing that home-currency amount; loosening salary variation thresholds (rejected).
+
+Consequences: request_25 clears FX support but remains unsupported on transport cadence; no further fix was made. Final v2 run: `artifacts/evaluation/deterministic-core-v2-final/`. 65 tests pass; 25 selected, 1 processed, 24 unsupported, 0 failed, 1 fully matching row. Comparison is preserved at `artifacts/diagnostics/deterministic-core-v2-comparison.json`.

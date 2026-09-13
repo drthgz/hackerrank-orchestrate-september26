@@ -52,8 +52,15 @@ def normalize(raw: RawContext) -> FinancialContext:
     profile = Profile(p["user_id"], p["home_currency"], money(p["current_available_balance"]), money(p["minimum_balance_to_keep"]), methods, categories("expense_categories_to_protect"), categories("expense_categories_user_is_willing_to_reduce"), categories("expense_categories_user_is_willing_to_stop"), positive_integer(p["max_installment_months"]) if p["max_installment_months"] else None)
     events = []
     for e in raw.events:
-        if e["status"] not in {"settled", "pending", "scheduled", "failed", "cancelled", "unrealized"} or e["direction"] not in {"debit", "credit"}:
+        expected_direction = {
+            "expense": "debit", "subscription": "debit", "debt_payment": "debit",
+            "investment_purchase": "debit", "income": "credit", "refund": "credit",
+            "investment_sale": "credit", "investment_valuation": "non_cash",
+        }.get(e["event_type"])
+        if e["status"] not in {"settled", "pending", "scheduled", "failed", "cancelled", "unrealized"} or e["direction"] != expected_direction:
             raise DataError(f"{e['event_id']}: invalid cash state/direction")
+        if (e["status"] == "unrealized") != (e["direction"] == "non_cash"):
+            raise DataError(f"{e['event_id']}: invalid cash/non-cash combination")
         if not e["currency"] or not e["category"]:
             raise DataError(f"{e['event_id']}: missing currency/category")
         if not e["settlement_date"] and e["status"] != "unrealized":

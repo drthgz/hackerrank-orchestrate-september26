@@ -2,17 +2,17 @@
 
 ## Current phase
 
-Phase 3 — evaluation harness complete; first full-sample baseline recorded. Awaiting user review; financial policy unchanged.
+Targeted deterministic correctness/reconciliation milestone complete; baseline-v1 and final deterministic-core-v2 evaluation preserved. Awaiting user review; no AI extraction.
 
 ## In progress
 
-- None; evaluator milestone complete.
+- None; targeted milestone complete.
 
 ## Next
 
-- [ ] Review baseline-v1 and authorize the next deterministic-engine work.
-- [ ] Investigate non_cash normalization failures with focused regressions before fixing.
-- [ ] Trace request_05 forecast/accounting to explain the false-positive affordability result; do not tune to its label.
+- [ ] Review v1 trace and v2 comparison before further implementation.
+- [ ] Define evidence-based recurring-stream identity/termination and one-time-event eligibility, including household income and investment contributions.
+- [ ] Investigate conservative expense-policy limitations and general safe-capacity behavior; do not tune to sample IDs.
 
 ## Completed
 
@@ -36,6 +36,12 @@ Phase 3 — evaluation harness complete; first full-sample baseline recorded. Aw
 - [x] Complete smoke-v1: 2 selected, 1 processed/matching, 1 unsupported.
 - [x] Record baseline-v1: 25 selected, 2 processed, 21 unsupported, 2 failed; 1 fully matching structured row.
 - [x] Record 5 comparable financial mismatches, 138 missing fields, and 2 prose diagnostics; no benchmark failures fixed. See [evaluator baseline notes](../code/evaluation/README.md).
+
+- [x] Preserve request_05 pre-change chronological trace; identify invented post-terminal salary as the false-positive cause.
+- [x] Add narrow terminal-payroll parsing, valid non_cash normalization, explicit lifecycle reconciliation/provenance and reservation-release handling.
+- [x] Add exact settlement-date FX conversion after scope assessment; leave household income identity and transport cadence unresolved.
+- [x] Pass 65 tests (19 new regressions); run all requested targeted evaluations and final 25-sample run without further mismatch patches.
+- [x] Record v2: 1 processed, 24 unsupported, 0 failed, 1 matching row; comparable financial mismatches 5 -> 0 because the false-positive output is withheld.
 
 ## Blocked / needs decision
 

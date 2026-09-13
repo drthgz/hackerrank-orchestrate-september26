@@ -4,12 +4,14 @@ No CSV knowledge, evidence interpretation, label access, or payment selection.
 """
 
 from collections import defaultdict
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 from statistics import median
 
-from .domain import Event, FinancialContext, Payment, UnsupportedCase
+from .domain import CashKind, Event, FinancialContext, Payment, UnsupportedCase
+from .reconciliation import ResolvedContext, reconcile, stream_key
+from .fx import to_home
 
 
 @dataclass(frozen=True)
@@ -23,7 +25,7 @@ class ForecastPolicy:
     lifecycle resolution are deliberately unsupported. These choices are policy,
     not loader/serializer behavior or final challenge interpretations.
     """
-    version: str = "vertical-slice-v1"
+    version: str = "deterministic-core-v2"
     horizon_days: int = 90  # Include request date and the day at +90.
     min_occurrences: int = 3
     min_months: int = 3
@@ -69,11 +71,6 @@ class Simulation:
     points: tuple[BalancePoint, ...]
     minimum_balance: Decimal
     safe: bool
-
-
-def stream_key(event: Event) -> tuple[str, str, str]:
-    # Structured type/category/direction only: descriptions are not interpreted.
-    return event.event_type, event.category, event.direction
 
 
 def _next_month(value: date) -> date:
@@ -135,45 +132,30 @@ def infer_occurrences(history: tuple[Event, ...], start: date, end: date,
     return tuple(sorted(future))
 
 
-def _active_events(events: tuple[Event, ...], start: date) -> tuple[Event, ...]:
-    by_id = {e.event_id: e for e in events}
-    suppressed = set()
-    replacements = {}
-    for event in events:
-        if not event.linked_event_id:
-            continue
-        previous = by_id[event.linked_event_id]
-        # Only a pending -> settled representation is supported in this slice.
-        if previous.status == "pending" and event.status == "settled" and stream_key(previous) == stream_key(event) and previous.currency == event.currency:
-            suppressed.add(previous.event_id)
-            if event.direction == "debit" and event.settlement_date >= start:
-                # A future-dated representation must not release today's hold.
-                # Reserve the replacement amount now, without a second debit.
-                replacements[event.event_id] = replace(event, status="pending")
-        else:
-            raise UnsupportedCase("Lifecycle relationship needs the full resolver")
-    return tuple(replacements.get(e.event_id, e) for e in events if e.event_id not in suppressed and e.status not in {"cancelled", "failed", "unrealized"})
-
-
-def build_forecast(context: FinancialContext,
+def build_forecast(context: FinancialContext | ResolvedContext,
                    policy: ForecastPolicy = ForecastPolicy()) -> ForecastTimeline:
+    # Compatibility for direct callers; the application invokes reconciliation
+    # as its own stage and passes a ResolvedContext. No lifecycle logic lives here.
+    resolved = context if isinstance(context, ResolvedContext) else reconcile(context)
+    context = resolved.context
     if context.evidence:
         raise UnsupportedCase("Uninterpreted messages/images require later extraction")
-    if any(e.currency != context.profile.currency for e in context.events):
-        raise UnsupportedCase("FX forecasting is outside this vertical slice")
-    if any(e.amount is None for e in context.events):
+    if any(e.amount is None for e in resolved.events):
         raise UnsupportedCase("Missing financial amount remains unresolved")
     start = context.request.request_date
     end = start + timedelta(days=policy.horizon_days)
     history = defaultdict(list)
     explicit = {}
     entries = []
-    for event in _active_events(context.events, start):
+    terminated = {end.stream: end for end in resolved.stream_ends}
+    treatments = {item.event_id: item for item in resolved.treatments}
+    for event in resolved.events:
         when = event.settlement_date
         if when is None:
             raise UnsupportedCase("Active cash event is missing settlement date")
         if event.status == "settled" and when < start:
-            history[stream_key(event)].append(event)
+            if treatments[event.event_id].recurrence_eligible:
+                history[stream_key(event)].append(event)
             continue
         if when < start and event.status != "pending":
             raise UnsupportedCase("Overdue scheduled cash event needs reconciliation")
@@ -185,14 +167,19 @@ def build_forecast(context: FinancialContext,
         if key in explicit:
             raise UnsupportedCase("Multiple explicit records for one occurrence")
         explicit[key] = event
-        if event.direction == "credit" and event.status == "pending":
+        if not treatments[event.event_id].cash_affecting:
             continue  # Also suppresses inference for its explicit occurrence.
-        if event.direction == "credit" and not (event.event_type == "income" and event.category == "salary"):
+        if event.direction == "credit" and event.status != "settled" and not (event.event_type == "income" and event.category == "salary"):
             raise UnsupportedCase("Future non-salary credit needs cash-state resolution")
         cash_date = start if event.status == "pending" else when
         sign = Decimal("-1") if event.direction == "debit" else Decimal("1")
-        entries.append(ForecastEntry(cash_date, sign * event.amount, event.event_id, (event.source.source_id,), "explicit"))
+        converted, rate_sources = to_home(event.amount, event.currency, context.profile.currency, when, context.rates)
+        entries.append(ForecastEntry(cash_date, sign * converted, event.event_id, treatments[event.event_id].source_ids + rate_sources, "explicit"))
     for key, records in sorted(history.items()):
+        if key in terminated:
+            continue  # Historical final payroll is cash history, not future income.
+        if len({e.currency for e in records}) != 1:
+            raise UnsupportedCase("Mixed-currency stream needs source reconciliation")
         try:
             occurrences = infer_occurrences(tuple(records), start, end, policy)
         except UnsupportedCase as exc:
@@ -203,7 +190,12 @@ def build_forecast(context: FinancialContext,
             if (key, when) in explicit:
                 continue
             sign = Decimal("-1") if key[2] == "debit" else Decimal("1")
-            entries.append(ForecastEntry(when, sign * amount, f"inferred:{':'.join(key)}:{when}", tuple(sorted(e.source.source_id for e in records)), "recurrence"))
+            converted, rate_sources = to_home(amount, records[0].currency, context.profile.currency, when, context.rates)
+            entries.append(ForecastEntry(when, sign * converted, f"inferred:{':'.join(key)}:{when}", tuple(sorted(e.source.source_id for e in records)) + rate_sources, "recurrence"))
+    for release in resolved.reservation_releases:
+        if start <= release.date <= end:
+            converted, rate_sources = to_home(release.amount, release.currency, context.profile.currency, release.date, context.rates)
+            entries.append(ForecastEntry(release.date, converted, f"reservation-release:{release.source_ids[-1]}", release.source_ids + rate_sources, "reservation_release"))
     return ForecastTimeline(start, end, context.profile.balance, context.profile.minimum,
                             tuple(sorted(entries, key=lambda e: (e.date, e.entry_id))), policy)
 

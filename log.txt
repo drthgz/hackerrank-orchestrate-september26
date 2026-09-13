@@ -1524,3 +1524,360 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+## [2026-09-13T06:17:37.184491+00:00] Targeted deterministic core v2 correctness
+
+User Prompt (verbatim, secrets redacted):
+The evaluation harness is complete and the first 25-sample baseline is preserved.
+
+Current baseline:
+
+- 25 selected
+- 2 processed
+- 21 unsupported
+- 2 failed
+- 1 fully matching structured row
+- 46 tests passing
+- zero model calls
+
+Do not implement AI extraction yet.
+The next milestone is a **targeted deterministic correctness and reconciliation pass** based on the baseline.
+The goal is NOT to maximize the benchmark score in one step.
+The goal is to strengthen the deterministic foundation before adding AI-derived facts.
+
+## Priority order
+
+Investigate and address these categories in this order:
+
+1. `request_05`: processed but materially incorrect
+2. `request_21` / `request_22`: normalization failures involving `non_cash` unrealized valuations
+3. `request_01`: unsupported linked financial lifecycle
+4. only then consider whether `request_13` or `request_25` can be safely addressed within this milestone
+
+Do not work on uninterpreted message/image cases yet.
+
+---
+
+# 1. Diagnose `request_05` before modifying logic
+
+`request_05` currently produces:
+```text
+amount_safe_to_pay = 15488
+```
+
+while the solved sample expects approximately:
+```text
+amount_safe_to_pay = 737
+affordability_status = not_recommended
+```
+
+Five of six structured financial fields disagree.
+
+This is too large a discrepancy to treat as a tuning issue.
+
+Before changing code, produce a deterministic trace of the current calculation for `request_05`.
+
+The trace should show, chronologically where applicable:
+
+- opening balance used
+- reserve/minimum balance
+- included historical events
+- excluded historical events and reasons
+- inferred recurring streams
+- inferred future occurrences
+- explicit future events
+- pending debit treatment
+- pending credit treatment
+- lifecycle-linked events
+- non-cash events
+- each balance-changing forecast event
+- candidate purchase/payment
+- projected minimum balance
+- calculated safe capacity
+- selected candidate and ranking reason
+
+The purpose is to answer:
+
+**Where does 15,488 come from?**
+
+Do not begin by changing thresholds.
+
+Do not use the expected answer inside the application.
+
+Use the solved expected result only after the current computation is traced, as external evidence that our interpretation is likely wrong.
+
+Classify the root cause if possible as one or more of:
+```text
+normalization
+cash-state classification
+lifecycle reconciliation
+opening balance
+recurrence
+duplicate future occurrence
+pending transaction handling
+forecast ordering
+safe-capacity calculation
+candidate planning
+other / unresolved
+```
+
+If the repository specification directly resolves the issue, follow it.
+
+If not, inspect related solved samples for evidence of the intended general rule.
+
+Do not create a `request_05` special case.
+
+---
+
+# 2. Correctly represent `non_cash`
+
+`request_21` and `request_22` currently fail during normalization because unrealized valuations with `non_cash` state/direction are rejected.
+
+Investigate the repository's actual event schema and semantics.
+
+The normalized domain model should distinguish:
+```text
+cash-affecting event
+```
+
+from:
+```text
+non-cash valuation / informational event
+```
+
+where appropriate.
+
+A valid non-cash event should not fail normalization merely because it does not represent a debit or credit.
+
+Likewise, it must not accidentally alter spendable cash.
+
+Implement the most general model supported by the repository.
+
+Add regression tests proving at least:
+
+- valid non-cash events normalize successfully
+- non-cash valuation does not change cash balance
+- non-cash value cannot increase payment capacity
+- malformed cash/non-cash combinations still fail validation
+
+Do not simply ignore every unfamiliar event type.
+
+---
+
+# 3. Implement lifecycle reconciliation where the repository defines it
+
+`request_01` currently stops with:
+```text
+Lifecycle relationship needs the full resolver
+```
+
+Implement the minimum general lifecycle reconciliation necessary to correctly represent linked financial events.
+
+Investigate examples of:
+
+- authorization -> settlement
+- pending -> settled
+- reversal
+- refund
+- linked investment/non-cash events
+- any other linked-event semantics actually present in the repository
+
+The objective is to prevent:
+
+- double counting
+- premature release of reserved cash
+- treating replacement representations as independent cash movements
+- deleting genuinely separate movements such as debit + refund
+
+Keep reconciliation deterministic.
+
+A lifecycle relation should produce an explicit normalized interpretation rather than being handled opportunistically inside forecasting.
+
+Conceptually preserve:
+```text
+raw events -> lifecycle reconciliation -> normalized cash movements / reservations -> forecast
+```
+
+Add focused synthetic unit tests for every lifecycle behavior implemented.
+
+---
+
+# 4. Preserve provenance and diagnostics
+
+When reconciliation changes how an event participates in the cash timeline, retain enough information to answer:
+
+- which raw event(s) produced the normalized financial movement
+- whether it is cash-affecting
+- whether it is reserved, settled, replaced, reversed, or informational
+- why another linked representation was excluded from cash impact
+
+This will make later benchmark failures much easier to inspect.
+
+Do not over-engineer a tracing framework; extend the existing diagnostics cleanly.
+
+---
+
+# 5. Re-evaluate before expanding scope
+
+After implementing the generalized fixes above:
+
+Run the complete existing test suite.
+
+Then run:
+```bash
+python3 -B code/evaluation/main.py --request-id request_05
+python3 -B code/evaluation/main.py --request-id request_21 --request-id request_22
+python3 -B code/evaluation/main.py --request-id request_01
+python3 -B code/evaluation/main.py --all
+```
+
+Preserve the previous baseline rather than overwriting it.
+
+Create a new evaluation run/config identifier.
+
+Compare:
+```text
+baseline-v1
+vs
+deterministic-core-v2
+```
+
+Report changes in:
+
+- processed
+- unsupported
+- failed
+- fully matching rows
+- per-field accuracy
+- mismatch count
+
+Do not modify additional logic merely because the new full run exposes more mismatches.
+
+---
+
+# 6. Regression-test philosophy
+
+Every generalized bug fixed during this milestone must receive a focused regression test.
+
+Prefer:
+```text
+minimal synthetic financial scenario -> deterministic function -> independently known result
+```
+
+over:
+```text
+request_05 must equal benchmark answer
+```
+
+The benchmark should confirm generalization.
+
+The unit/regression test should prove the rule.
+
+In particular, preserve extensive testing around:
+```text
+raw evidence/events -> normalization/reconciliation -> forecast timeline -> deterministic resolver
+```
+
+---
+
+# 7. Scope decision for `request_13` and `request_25`
+
+After the first three priorities are complete, assess:
+
+### `request_13`
+
+Variable salary recurrence.
+
+### `request_25`
+
+FX forecasting.
+
+Do NOT automatically implement them.
+
+If either has a repository-defined deterministic rule and can be implemented cleanly without broadening the milestone significantly, proceed with focused tests.
+
+If it requires substantial new policy design, record it as the next deterministic task and stop.
+
+The main purpose of this milestone is correctness of the existing deterministic foundation.
+
+---
+
+# 8. Documentation
+
+Update:
+
+- `docs/tasks.md`
+- `docs/decisions.md` for material financial-policy decisions
+- `docs/design.md` only if reconciliation changes component boundaries
+
+Record confirmed financial semantics separately from provisional assumptions.
+
+If a previous provisional assumption is disproven, mark it superseded rather than silently rewriting history.
+
+---
+
+# Constraints
+
+Do NOT:
+
+- implement message/image AI extraction
+- call an LLM from application code
+- tune logic to individual expected answers
+- hardcode request IDs
+- loosen validation simply to process more samples
+- modify dataset files
+- generate final root `output.csv`
+- implement installment/partial/spending strategies unless directly necessary for the investigated deterministic cases
+- commit or push
+
+A request remaining unsupported is preferable to a confidently incorrect financial decision.
+
+---
+
+# Definition of done
+
+This milestone is complete when:
+
+1. the cause of `request_05`'s large discrepancy is understood
+2. any confirmed general bug causing it is fixed with regression tests
+3. valid `non_cash` events no longer fail normalization
+4. non-cash values cannot affect available cash
+5. linked lifecycle events have a deterministic reconciliation path where supported by the repository
+6. tests pass
+7. a new full 25-sample evaluation is produced
+8. baseline-v1 and the new run are compared
+9. no request-specific benchmark hacks were introduced
+
+At the end report:
+
+1. root cause of `request_05`
+2. generalized fixes made
+3. files modified
+4. tests added and total test result
+5. `request_01`, `05`, `21`, and `22` results
+6. before/after 25-sample metrics
+7. newly exposed mismatch patterns
+8. whether `request_13` or `request_25` was addressed and why
+9. remaining provisional assumptions
+10. recommended next priority
+
+Do not begin AI extraction after finishing this milestone.
+
+Agent Response Summary:
+Preserved a chronological request_05 v1 trace before changing code and found three invented continuing salary credits after an explicit Final employer payroll record; the request amount cap explains 15488. Added a narrow terminal-payroll rule, valid cash/informational normalization, explicit lifecycle reconciliation with provenance/reservation releases, and exact settlement-date FX after assessing request_25; deferred request_13's multi-source income policy. All 65 tests passed, including 19 new synthetic regressions, and targeted plus full evaluations completed; final v2 has 1 processed, 24 unsupported, 0 failed, and 1 fully matching row versus baseline's 2/21/2/1. The incorrect request_05 output is now withheld, residual recurrence/expense limits remain explicit, and no labels were used inside application code; no AI, dataset edits, final output, commits or pushes.
+
+Actions:
+* Created artifacts/diagnostics/request_05-v1/trace.json before application changes; preserved baseline-v1.
+* Added code/buy_or_wait/reconciliation.py, diagnostics.py, fx.py and tests/test_reconciliation.py.
+* Updated domain.py, normalize.py, forecast.py, pipeline.py, code/main.py, README.md, docs/design.md, docs/tasks.md and docs/decisions.md.
+* Ran all 65 tests and git diff --check successfully.
+* Ran targeted evaluations for request_05, request_21/request_22, request_01, request_25 and full v2 runs.
+* Preserved final results in artifacts/evaluation/deterministic-core-v2-final and comparison in artifacts/diagnostics/deterministic-core-v2-comparison.json.
+* Appended and verified this log entry: tool=Codex.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none
+
