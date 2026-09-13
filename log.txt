@@ -2350,3 +2350,262 @@ repo_root=/home/shiftmint/hackerrank-orchestrate-september26
 worktree=/home/shiftmint/hackerrank-orchestrate-september26
 parent_agent=none
 
+
+## 2026-09-13T02:18:00-05:00 Deterministic planning engine
+
+User Prompt (verbatim, secrets redacted):
+The recurring-stream milestone is complete.
+
+Current state:
+
+- 77 tests passing
+- normalization/reconciliation/stream classification/forecasting are separated
+- priority recurrence cases now reach planning
+- no processed-but-wrong benchmark cases
+- evidence extraction remains disabled
+- current bottleneck is deterministic planning
+
+Proceed with the next milestone:
+
+**implement the deterministic planning engine over an already-resolved forecast.**
+
+Do not implement AI extraction in this milestone.
+
+## Goal
+
+Given:
+```text
+normalized facts -> reconciled events -> resolved streams -> forecast timeline
+```
+
+deterministically evaluate all repository-supported strategies:
+
+1. full payment now
+2. wait until earliest safe full-payment date
+3. partial payment
+4. supplied installment option
+5. permitted flexible-spending changes
+6. not recommended when no safe eligible plan exists
+
+Planning must not reinterpret raw transactions or infer recurrence.
+
+## Core invariant
+
+Every proposed plan must be simulated against the forecast.
+
+A plan is valid only if:
+
+- all required payments complete
+- essential obligations remain covered
+- projected balance never falls below the preferred minimum
+- repository eligibility rules are satisfied
+
+Equality with the preferred minimum remains allowed unless contradicted by the repository.
+
+Use Decimal throughout.
+
+## Implement in this order
+
+### 1. Capacity and full payment
+
+Calculate safe immediate capacity from the forecast.
+
+Evaluate full payment today by actually inserting the payment into the timeline and simulating it.
+
+Do not rely solely on a static headroom formula if timeline simulation can produce a different result.
+
+### 2. Earliest safe full-payment date
+
+Search chronologically through eligible dates in the forecast horizon.
+
+Return the earliest date where the entire requested amount can safely be paid while preserving the minimum balance through the remainder of the forecast.
+
+Do not confuse:
+```text
+balance is high enough that day
+```
+
+with:
+```text
+payment remains safe through the entire remaining forecast
+```
+
+### 3. Wait strategy
+
+If full payment is unsafe today but becomes safely payable later, evaluate `wait` according to repository timing/deadline requirements.
+
+### 4. Partial payment
+
+Implement only according to repository rules.
+
+The partial plan must be exactly:
+```text
+safe amount on request date
++
+remaining amount on earliest eligible full-payment date
+```
+
+and only when:
+
+- partial payment is allowed
+- user accepts it
+- safe amount is > 0 and < requested amount
+- remainder can safely complete by the required completion date
+
+Simulate both payments together.
+
+### 5. Installments
+
+Use only supplied payment options.
+
+Do not invent installment schedules.
+
+Validate:
+
+- exact supplied dates/intervals
+- amounts/fees
+- full completion
+- user constraints such as maximum installment duration
+- minimum balance throughout
+
+Each candidate schedule must be simulated independently.
+
+### 6. Flexible spending changes
+
+Only flexible recurring expenses may be changed.
+
+Support repository-defined actions:
+```text
+stop:<event_id>
+reduce_to:<event_id>:<amount>
+```
+
+Find the minimum necessary changes, subject to output limits.
+
+Do not alter essential/fixed expenses.
+
+Any spending-change candidate must regenerate/simulate the affected forecast and prove the full requested purchase becomes safe.
+
+### 7. Candidate ranking
+
+Create explicit deterministic candidate objects and rank only valid candidates.
+
+Keep eligibility separate from ranking.
+
+Document the deterministic priority/tie-break policy.
+
+Do not rank an unsafe candidate above a safe one.
+
+Do not infer policy from one expected sample.
+
+## Architecture
+
+Prefer:
+```text
+ForecastTimeline -> CandidateGenerator -> CandidateSimulator -> EligibilityValidator -> CandidateRanker -> Prediction
+```
+
+Names may differ to fit the codebase.
+
+Planning must consume the forecast rather than modifying recurrence rules.
+
+## Diagnostics
+
+For every evaluated candidate preserve enough diagnostic information to show:
+
+- method
+- schedule
+- spending changes
+- minimum projected balance
+- completion date
+- eligibility
+- rejection reason
+- ranking result
+
+This should make benchmark failures traceable.
+
+## Tests
+
+Add focused synthetic tests for at least:
+
+- full payment safely succeeds
+- full payment fails due to later minimum-balance violation
+- equality with reserve
+- earliest safe date
+- wait eligibility
+- no safe date
+- valid partial payment
+- partial remainder unsafe
+- partial completion after deadline rejected
+- valid supplied installment plan
+- unsafe installment plan
+- installment option not invented
+- flexible spending reduction
+- fixed/essential expense cannot be changed
+- minimum necessary spending changes
+- candidate ranking/tie-breaking
+
+Keep all existing 77 tests passing.
+
+## Evaluation
+
+After implementation run the four cases that currently reach planning:
+```bash
+python3 -B code/evaluation/main.py --request-id request_01
+python3 -B code/evaluation/main.py --request-id request_13
+python3 -B code/evaluation/main.py --request-id request_21
+python3 -B code/evaluation/main.py --request-id request_25
+python3 -B code/evaluation/main.py --all
+```
+
+Preserve prior artifacts and compare against `recurring-streams-v1-final`.
+
+Do not modify recurrence/extraction logic merely to improve these results.
+
+A newly processed but incorrect request must be reported rather than patched ad hoc.
+
+## Scope constraints
+
+Do NOT:
+
+- implement AI/image/message extraction
+- hardcode sample IDs or expected outputs
+- alter recurrence thresholds to improve planning results
+- invent payment options
+- modify datasets
+- generate final root `output.csv`
+- commit or push
+
+## Definition of done
+
+At completion report:
+
+1. planning architecture implemented
+2. candidate types supported
+3. eligibility and ranking rules
+4. files changed
+5. tests added and total passing
+6. results for request_01/13/21/25
+7. before/after 25-sample metrics
+8. newly processed-but-wrong cases
+9. remaining planning blockers
+10. whether planning is mature enough to begin selective evidence extraction
+
+Keep this milestone focused. Do not start extraction after completing it.
+
+Agent Response Summary:
+Implemented a deterministic planning engine downstream of the immutable forecast with simulation-based safe capacity, daily earliest-full-date search, full/wait/partial/supplied-installment/flexible-change/no-plan candidates, explicit eligibility, ranking, and candidate diagnostics. Added 13 focused planning tests for 90 total passing tests; no recurrence or extraction logic was changed. Preserved planning-v1-final: 6 processed, 19 evidence-stage unsupported, 0 failed, 1 fully matching row; newly exposed structured mismatches are reported without benchmark-specific patches. Updated working design, tasks, decisions, and README; no dataset changes, final output, commit, or push.
+
+Actions:
+* Added code/buy_or_wait/planning.py and tests/test_planning.py.
+* Updated pipeline.py, processing.py, evaluator/forecast tests, README.md, and working docs.
+* Ran 90 tests and git diff --check successfully.
+* Preserved targeted planning-v1-final request runs and the full 25-sample evaluation.
+* Verified application code contains no sample IDs or expected-answer access.
+
+Context:
+tool=Codex
+branch=main
+repo_root=/home/shiftmint/hackerrank-orchestrate-september26
+worktree=/home/shiftmint/hackerrank-orchestrate-september26
+parent_agent=none

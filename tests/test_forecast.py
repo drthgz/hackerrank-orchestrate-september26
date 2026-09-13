@@ -99,8 +99,7 @@ class ForecastTest(unittest.TestCase):
         self.assertTrue(equal.safe)
         self.assertFalse(simulate(timeline, (Payment(timeline.start, Decimal("60.01")),)).safe)
         unsafe = replace(timeline, opening_balance=Decimal("40"))
-        with self.assertRaisesRegex(UnsupportedCase, "unsafe"):
-            decide(context(self.history()), unsafe)
+        self.assertEqual(decide(context(self.history()), unsafe).recommended_payment_method, Method.NO)
 
     def test_decimal_arithmetic_and_same_day_order(self):
         start = date(2026, 4, 3)
@@ -138,13 +137,13 @@ class ForecastTest(unittest.TestCase):
             run(inputs, ROOT / "dataset", output)
             self.assertEqual(output.read_bytes(), original)
 
-    def test_unsupported_sample_does_not_write_prediction(self):
+    def test_unsafe_sample_writes_not_recommended_prediction(self):
         with tempfile.TemporaryDirectory() as temporary:
             inputs, output = Path(temporary) / "requests.csv", Path(temporary) / "predictions.csv"
             prepare_inputs(ROOT / "dataset" / "sample_requests.csv", inputs, ("request_01",))
-            with self.assertRaises(UnsupportedCase):
-                run(inputs, ROOT / "dataset", output)
-            self.assertFalse(output.exists())
+            predictions = run(inputs, ROOT / "dataset", output)
+            self.assertEqual(predictions[0].recommended_payment_method, Method.NO)
+            self.assertTrue(output.exists())
 
     def test_final_output_and_dataset_are_protected(self):
         for target in (ROOT / "output.csv", ROOT / "dataset" / "output.csv"):

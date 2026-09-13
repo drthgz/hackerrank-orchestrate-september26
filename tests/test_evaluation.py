@@ -125,15 +125,14 @@ class EvaluationTest(unittest.TestCase):
         metrics = json.loads((directory / "metrics.json").read_text())
         results = json.loads((directory / "request_results.json").read_text())
         self.assertEqual(metrics["selected_requests"], 2)
-        self.assertEqual(metrics["successfully_processed"], 1)
-        self.assertEqual(metrics["unsupported_requests"], 1)
-        self.assertEqual(results[0]["failure_stage"], "planning")
+        self.assertEqual(metrics["successfully_processed"], 2)
+        self.assertEqual(metrics["unsupported_requests"], 0)
+        self.assertIsNone(results[0]["failure_stage"])
         self.assertEqual(results[1]["validation"], "passed")
         with (directory / "mismatches.csv").open() as stream:
             mismatches = list(csv.DictReader(stream))
         missing = [m for m in mismatches if m["kind"] == "missing_prediction"]
-        self.assertEqual(len(missing), 6)
-        self.assertTrue(all(m["request_id"] == "request_01" and m["actual"] == "" for m in missing))
+        self.assertEqual(missing, [])
         self.assertTrue((directory / "metadata.json").is_file())
 
     def test_zero_usage_is_truthful(self):

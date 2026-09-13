@@ -2,16 +2,16 @@
 
 ## Current phase
 
-Recurring-stream identity/continuation milestone complete. `recurring-streams-v1-final` preserves comparable correctness; no AI extraction.
+Deterministic planning milestone complete. `planning-v1-final` processes all structured-only samples; no AI extraction.
 
 ## In progress
 
-- None; recurrence milestone complete and awaiting review.
+- None; planning milestone complete and awaiting review.
 
 ## Next
 
-- [ ] Implement baseline capacity and later/partial/installment/spending-change planning on the resolved forecast.
-- [ ] Decide whether to expand deterministic message parsing or begin the narrow evidence extraction contract.
+- [ ] Review planning benchmark mismatches, especially forecast-policy differences in requests 01/13/21.
+- [ ] Begin the narrow cached evidence-extraction contract after review.
 
 ## Completed
 
@@ -46,6 +46,11 @@ Recurring-stream identity/continuation milestone complete. `recurring-streams-v1
 - [x] Classify singleton history as one-time; exclude uncertain income and block unresolved recurring expenses.
 - [x] Add behavior-stream contingency reserves and inspectable stream diagnostics; pass 77 tests.
 - [x] Record `recurring-streams-v1-final`: 1 processed, 24 unsupported, 0 failed, 1 matching, zero comparable mismatches.
+- [x] Add simulation-based immediate capacity and earliest safe full-payment date search.
+- [x] Add full, wait, partial, supplied-installment, flexible-change, and not-recommended candidates.
+- [x] Add independent candidate eligibility, simulation, ranking, rejection diagnostics, and planning artifacts.
+- [x] Add 13 planning tests; all 90 tests pass.
+- [x] Record `planning-v1-final`: 6 processed, 19 unsupported, 0 failed, 1 fully matching row.
 
 ## Blocked / needs decision
 
@@ -53,6 +58,7 @@ Recurring-stream identity/continuation milestone complete. `recurring-streams-v1
 - [x] User authorized explicit provisional recurrence and conservative same-day ordering.
 - [ ] Resolve opening-balance timing, pending-hold treatment, horizon boundaries, and same-day ordering before the full financial engine.
 - [ ] Validate provisional behavior categories, one-occurrence contingency, cadence tolerance, and min/max amount estimators against broader evidence.
+- [ ] Confirm whether `max_installment_months` limits payment count or elapsed calendar months.
 - [ ] Resolve installment duration, deadline/status edge cases, and recurring spending-change targeting before complete planning.
 - [ ] Fix rounding/tie-break conventions and cached-usage accounting before release; see [decisions.md](decisions.md).
 

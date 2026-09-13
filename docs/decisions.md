@@ -109,6 +109,22 @@ Alternatives considered: Model ranking; equating earliest full date to final ins
 
 Consequences: Capacity and recommendation are separate outputs. Deadline/status edge cases and exact ID ordering remain open below.
 
+Implemented by planning-v1. Immediate capacity is the largest cent-denominated amount proven safe by simulation; earliest full date searches every date through the request-relative horizon and simulates the full remaining timeline. Candidate eligibility precedes ranking. Valid candidates rank by no changes, fewer changes, lower total paid, earlier start, fewer payments, option ID, then a stable method key. No-plan results serialize as `not_affordable`/`not_recommended` rather than an internal unsupported failure.
+
+## Decision: Deterministic planning v1
+
+Status: Accepted
+
+Context: Recurrence-capable requests reached a full-payment-only planner that could neither report safe capacity nor evaluate repository-supported alternatives.
+
+Decision: Generate a finite candidate set from the resolved forecast. Full and wait require accepted full payment; partial uses exactly safe-today plus the remainder on the baseline earliest-full date; installments reproduce supplied options exactly; changes target the latest source event of an eligible recurring stream and affect projected entries only. Enumerate up to three distinct change actions and retain the minimum valid count through ranking. Simulate every candidate and reject deadline, user-preference, duration, schedule, completion, or minimum-balance violations. Interpret `max_installment_months` provisionally as the maximum supplied installment payment count.
+
+Reason: Financial safety and option eligibility are deterministic and auditable once a forecast exists. Raw evidence and recurrence policy do not belong in planning.
+
+Alternatives considered: Static headroom only; invented schedules; model-ranked candidates; modifying raw events for spending changes; emitting unsupported instead of the required no-plan decision.
+
+Consequences: Candidate traces expose method, payments, changes, completion, minimum balance, rejection reason, and rank. `planning-v1-final` processes 6/25 with 19 evidence-stage unsupported cases. Sample differences for requests 01/13/21 are preserved for later forecast-policy analysis; planning did not alter recurrence to match labels. Installment-month interpretation and change effective scope remain provisional.
+
 ## Decision: Settlement-date FX and cash-state handling
 
 Status: Accepted

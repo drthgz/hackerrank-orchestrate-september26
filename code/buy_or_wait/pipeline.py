@@ -12,7 +12,7 @@ from .diagnostics import reconciliation_diagnostic, write_diagnostic
 from .loading import build_context, load_requests
 from .normalize import normalize
 from .output import write_predictions
-from .processing import decide
+from .planning import plan
 from .validation import validate_output
 
 
@@ -49,7 +49,12 @@ def run(request_path: Path, dataset: Path, output: Path,
             "baseline": asdict(baseline), "immediate_full_candidate": asdict(candidate),
             "uncapped_headroom": baseline.minimum_balance - timeline.minimum_balance,
             "capped_capacity": min(context.request.requested_amount, max(Decimal("0"), baseline.minimum_balance - timeline.minimum_balance))})
-        predictions.append(_stage("planning", decide, context, timeline))
+        planning = _stage("planning", plan, context, timeline)
+        _stage("serialization", write_diagnostic, diagnostic_dir / "planning.json", {
+            "amount_safe_today": planning.amount_safe_today,
+            "earliest_safe_full_date": planning.earliest_safe_full_date,
+            "candidates": [asdict(item) for item in planning.evaluations]})
+        predictions.append(planning.prediction)
     predictions = tuple(predictions)
     # All requests must succeed before any CSV is written.
     output.parent.mkdir(parents=True, exist_ok=True)

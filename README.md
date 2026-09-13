@@ -34,11 +34,9 @@ rejects request files containing expected-output columns. Development prediction
 are written to `artifacts/vertical-slice/request_09/predictions.csv`, after independent
 structural validation. It does not write the final root `output.csv`.
 
-**Provisional vertical-slice policy — subject to replacement after evaluator-guided
-analysis of all solved samples.** Only a safe, eligible immediate full payment is
-selected. Unresolved facts, ambiguous recurrence, or other required payment strategies
-fail explicitly. `request_01` remains unsupported under narrow recurrence rules even though its
-linked lifecycle records now reconcile. Current policy version is `recurring-streams-v1`. No AI calls occur in the application.
+The deterministic pipeline now evaluates full, wait, partial, supplied-installment,
+flexible-spending-change, and not-recommended strategies over `recurring-streams-v1`.
+Unresolved evidence still fails explicitly. No AI calls occur in the application.
 See [the decision log](docs/decisions.md) for exact provisional rules.
 
 For an already projected, input-only request file, the application entry point is:

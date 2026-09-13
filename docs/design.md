@@ -1,6 +1,6 @@
 # Working design
 
-Status: deterministic pipeline/evaluator implemented; reconciliation, FX, and explicit recurring-stream classification added. Forecast and planning policies below remain provisional.
+Status: deterministic pipeline/evaluator implemented through candidate planning; extraction remains disabled. Forecast policies remain provisional.
 
 ## Principle and guardrails
 
@@ -48,7 +48,7 @@ CSV records + selectively interpreted messages/images
 | Resolver | Normalized facts -> ResolvedContext (effective events, treatments, stream endings, reservation releases) | Explicit deterministic stage before forecasting; source lineage retained |
 | Stream classifier | ResolvedContext -> inspectable recurring/one-time streams | Exact labeled transactions; narrow category behavior; continuation, cadence, and amount resolved separately |
 | Forecaster | ResolvedContext + policy -> home-currency cash-flow timeline | Supported recurrence, exact settlement-date FX, conservative expenses |
-| Planner | Timeline + preferences/options -> simulated candidates | Eligibility, changes, capacity, published ranking |
+| Planner | Timeline + preferences/options -> prediction + candidate trace | Simulated capacity/dates, finite supplied strategies, eligibility, changes, published ranking |
 | Validator/reporter | Candidate + state -> checked prediction/artifacts | Cannot waive failed constraints; explanations use verified facts |
 
 ## Keys and request context
@@ -82,6 +82,8 @@ Keep raw evidence immutable. Separate extracted assertions from accepted/resolve
 Implemented v2 boundary: normalization accepts typed cash/informational events; reconciliation records each source event as settled, reserved, replaced, inactive, unsettled credit, or informational. It retains distinct refund/sale movements and explicit terminal-payroll facts. Forecast reads effective events and reservation releases; it no longer owns lifecycle rules. Per-request reconciliation and forecast JSON sidecars survive later unsupported planning. FX provenance identifies the supplied settlement-date currency pair. Direct forecast callers retain a compatibility adapter that invokes the same reconciler.
 
 Implemented recurring-stream boundary: `streams.py` assigns exact normalized labels to fixed transaction streams, while groceries, transport, and dining use explicit category-level spending-behavior streams. Repeated salary labels remain independent; otherwise variable labels may form independent day-of-month slots. Every stream records evidence IDs/dates/intervals, cadence, continuation state/reason, amount policy, and projected dates. Forecast consumes projections and adds one max-observed contingency occurrence for each spending-behavior stream; it does not rediscover cadence.
+
+Implemented planning boundary: `planning.py` computes cent-denominated immediate capacity and the earliest safe full-payment date by repeated timeline simulation. It generates full-now, wait, prescribed two-payment partial, supplied installment, and eligible one-to-three spending-change candidates. Each candidate records its schedule, changes, completion, simulated minimum, eligibility/rejection reason, and rank. Spending changes transform only inferred recurrence/behavior-contingency entries for the targeted resolved stream; raw events and explicit cash movements remain immutable. `planning.json` is written independently of final CSV validation.
 
 ## Deterministic versus AI
 
